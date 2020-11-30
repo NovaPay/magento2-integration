@@ -1,0 +1,84 @@
+System message,en_US
+Confirm hold amount of the current order,Confirm hold amount of the current order
+Transaction not found,Transaction not found
+Cannot update status,Cannot update status
+Order status updated manually,Order status updated manually
+Order status was not changed,Order status was not changed
+Cannot cancel the payment,Cannot cancel the payment
+Order payment canceling,Order payment canceling
+Cannot confirm hold,Cannot confirm hold
+Confirmed hold by %1,Confirmed hold by %1
+Payment confirm hold processing,Payment confirm hold processing
+Incorrect signature on postback %1,Incorrect signature on postback %1
+Incorrect signature on postback,Incorrect signature on postback
+Order %1 not found,Order %1 not found
+Order status updated,Order status updated
+Order %1 status updated,Order %1 status updated
+Status updated by postback to %1,Status updated by postback to %1
+Order ID not found,Order ID not found
+Payment created already %1,Payment created already %1
+Order status created,Order status created
+API requests %1,API requests %1
+Order created. Redirecting to payment,Order created. Redirecting to payment
+Cannot create payment session,Cannot create payment session
+Cannot post a payment,Cannot post a payment
+Order not found,Order not found
+Gateway rejected the transaction.,Gateway rejected the transaction.
+Select Order Status,Select Order Status
+Payment mode Test,Payment mode Test
+Payment mode Live,Payment mode Live
+Payment type Hold,Payment type Hold
+Payment type Direct,Payment type Direct
+The authorize action is not available.,The authorize action is not available.
+The capture action is not available.,The capture action is not available.
+The refund action is not available.,The refund action is not available.
+Success payment,Success payment
+Fraud payment,Fraud payment
+Check payment status,Check payment status
+Do you really want to cancel this order?,Do you really want to cancel this order?
+Cancel payment,Cancel payment
+Confirm payment,Confirm payment
+Confirm hold amount,Confirm hold amount
+Submit confirm hold,Submit confirm hold
+Place Order,Place Order
+Confirm hold modalbox title,Confirm payment
+"<div class=""novapay-payment-logo""></div><div>Accept payments due to the most convenient and flexible online solutions. Configure the module and let your customers make a secure payment on your website. Track the payment status of each operation at your backoffice and manage the payment transaction.</div>","<div class=""novapay-payment-logo""></div><div>Accept payments due to the most convenient and flexible online solutions. Configure the module and let your customers make a secure payment on your website. Track the payment status of each operation at your backoffice and manage the payment transaction.</div>"
+Enabled,Enabled
+Credentials,Credentials
+Merchant ID,Merchant ID
+Public key,Public key
+Private key,Private key
+Password private key,Password private key
+Payment options,Payment options
+Title,Title
+Payment type,Payment type
+Payment mode,Payment mode
+Redirects after payment,Redirects after payment
+Success Url,Success Url
+Fail Url,Fail Url
+Status mapping,Status mapping
+Payment Action Created,Payment Action Created
+Payment Action Expired,Payment Action Expired
+Payment Action Processing,Payment Action Processing
+Payment Action Holded,Payment Action Holded
+Payment Action Hold confirmed,Payment Action Hold confirmed
+Payment Action Hold completion,Payment Action Hold completion
+Payment Action Paid,Payment Action Paid
+Payment Action Failed,Payment Action Failed
+Payment Action Processing void,Payment Action Processing void
+Payment Action Voided,Payment Action Voided
+Safe Delivery,Safe Delivery
+Width (cm),Width (cm)
+Height (cm),Height (cm)
+Depth (cm),Depth (cm)
+Pending,Pending
+Pending Payment,Pending Payment
+Processing,Processing
+On Hold,On Hold
+Complete,Complete
+Closed,Closed
+Canceled,Canceled
+Suspected Fraud,Suspected Fraud
+Payment Review,Payment Review
+Yes,Yes
+No,No

@@ -1,0 +1,109 @@
+<?php
+/**
+ * @var $block \Novapay\Payment\Block\Adminhtml\Order\ModalBox
+ */
+?>
+<div id="novapay-confirm-modal" style="display: none" data-title="<?= __('Confirm hold modalbox title') ?>">
+    <form action="<?= $block->escapeUrl($block->getFormUrl())?>" method="post" id="novapay-confirm-hold-form">
+        <label for="novapay-confirm-hold-amount admin-field"><?= __('Confirm hold amount') ?>: </label>
+        <div class="admin-field">
+            <input id="novapay-confirm-hold-amount" name="amount" type="number" pattern="[0-9]+([\.,][0-9]+)?" step="0.01" class="input-text admin__control-text no-changes">
+        </div>
+        <div class="admin-field">
+            <button type="submit" class="action-default scalable edit primary" id="novapay-confirm-hold-submit">
+                <?= __('Submit confirm hold') ?>
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+.novapay-confirm-modal .modal-inner-wrap{
+    max-width: 300px;
+}
+.novapay-confirm-modal .admin-field {
+    margin-top: 1.5rem;
+}
+.novapay-confirm-modal .admin-field input,
+.novapay-confirm-modal .admin-field button {
+    width: 100%;
+}
+.admin__control-text.error {
+    border-color: #e22626;
+}
+</style>
+
+<script>
+    require(
+        [
+            'jquery',
+            'Magento_Ui/js/modal/modal',
+            'loader',
+            // required for $.mage.__()
+            // does not work, probably because in HTML file
+            'mage/translate'
+            //,
+            // 'Magento_Ui/js/model/messageList'
+        ],
+        function (
+            $,
+            modal,
+            loader,
+            $t
+            //,
+            // messageList
+        ) {
+            var options = {
+                type: 'popup',
+                responsive: true,
+                innerScroll: true,
+                title: $.mage.__('Confirm hold modalbox title'),
+                modalClass: 'novapay-confirm-modal',
+                buttons: []
+                // @deprecated ugly ui
+                // buttons: [{
+                //     text: $.mage.__('Submit confirm hold'),
+                //     class: 'action-default scalable edit action-secondary',
+                //     click: function () {
+                //         this.closeModal();
+                //      }
+                // }]
+            };
+
+            var redirectUrl;
+            var $inputAmount;
+
+            window.novapayConfirmHold = function (amount, url) {
+                var $modal = $("#novapay-confirm-modal");
+                var title = $modal.data('title');
+                $('.novapay-confirm-modal [data-role="title"]').text(title);
+                $modal.modal('openModal');
+                // $modal.attr('title', $modal.data('title'));
+                // $modal.find('[data-role="title"]').text($modal.data('title'));
+                $inputAmount = $modal.find('[name="amount"]');
+                redirectUrl = url;
+                $inputAmount.val(amount);
+                window.setTimeout(function () {
+                    $inputAmount.focus();
+                }, 500);
+            }
+
+            var popup = modal(options, $('#novapay-confirm-modal'));
+
+            $('#novapay-confirm-modal form').on('submit', function () {
+                var amount = '' + $inputAmount.val();
+                amount = amount.replace(/[^\d\,\.]+/g, '');
+                amount = amount.replace(',', '.');
+                $inputAmount.removeClass('error');
+                if (amount <= 0) {
+                    // messageList.addErrorMessage(__('Only positive amount'));
+                    $inputAmount.addClass('error').focus();
+                    return false;
+                }
+                $('body').loader('show');
+                window.setLocation(redirectUrl.replace('{amount}', amount));
+                return false;
+            });
+        }
+    );
+</script>

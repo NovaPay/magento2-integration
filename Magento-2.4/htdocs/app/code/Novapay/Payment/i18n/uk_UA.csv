@@ -1,0 +1,84 @@
+System message,uk_UA
+Confirm hold amount of the current order,Підтвердіть суму утримання поточного замовлення
+Transaction not found,Транзакція не знайдена
+Cannot update status,Неможливо оновити статус
+Order status updated manually,Статус замовлення оновлений вручну
+Order status was not changed,Статус замовлення не змінився
+Cannot cancel the payment,Неможливо скасувати платіж
+Order payment canceling,Оплата скасовується
+Cannot confirm hold,Неможливо підтвердити списання
+Confirmed hold by %1,Підтверджено списання на %1 гривень
+Payment confirm hold processing,Підтвердження утримання платежу в процесі
+Incorrect signature on postback %1,Невірний підпис при зворотного зв'язку з API %1
+Incorrect signature on postback,Невірний підпис при зворотного зв'язку з API
+Order %1 not found,Замовлення №%1 не найден
+Order status updated,Статус замовлення оновлено
+Order %1 status updated,Замовлення № %1 змінив статус
+Status updated by postback to %1,Статус оновлено через зворотний зв'язок з API на %1
+Order ID not found,ID замовлення не знайдено
+Payment created already %1,Платіж вже створено %1
+Order status created,Статус замовлення Створено
+API requests %1,Запити до АПИ %1
+Order created. Redirecting to payment,Замовлення створено. Перенаправлення на оплату
+Cannot create payment session,Неможливо створити сеанс оплати
+Cannot post a payment,Неможливо провести платіж
+Order not found,Замовлення не знайдено
+Gateway rejected the transaction.,Шлюз відхилив трансакцію.
+Select Order Status,Виберіть відповідний статус замовлення
+Payment mode Test,Тестовий режим
+Payment mode Live,Робочий режим
+Payment type Hold,Списання після підтвердження
+Payment type Direct,Пряме списання
+The authorize action is not available.,Дія авторизації недоступна.
+The capture action is not available.,Дія захоплення недоступна.
+The refund action is not available.,Дія повернення недоступна.
+Success payment,Успішна оплата
+Fraud payment,Шахрайство
+Check payment status,Перевірити статус оплати
+Do you really want to cancel this order?,Ви дійсно хочете скасувати це замовлення?
+Cancel payment,Скасувати оплату
+Confirm payment,Підтвердити оплату
+Confirm hold amount,Сума утримання
+Submit confirm hold,Підтвердити
+Place Order,Розмістити замовлення
+Confirm hold modalbox title,Підтвердити оплату
+"<div class=""novapay-payment-logo""></div><div>Accept payments due to the most convenient and flexible online solutions. Configure the module and let your customers make a secure payment on your website. Track the payment status of each operation at your backoffice and manage the payment transaction.</div>","<div class = ""novapay-payment-logo""></div><div>Приймайте платежі завдяки максимально зручним та гнучким онлайн-рішенням. Налаштуйте модуль і дозвольте клієнтам здійснювати безпечні платежі на вашому сайті. Відстежуйте статус оплати кожної операції в вашому бек-офісі та керуйте платіжної транзакцією.</div>"
+Enabled,Включений
+Credentials,Налаштування доступу
+Merchant ID,Ідентифікатор продавця
+Public key,Відкритий ключ
+Private key,Секретний ключ
+Password private key,Пароль для секретного ключа
+Payment options,Опції модуля оплати
+Title,Заголовок
+Payment type,Тип оплати
+Payment mode,Режим роботи
+Redirects after payment,Переходи після оплати
+Success Url,Url при успішну оплату
+Fail Url,Url при помилку оплати
+Status mapping,Матриця статусів
+Payment Action Created,Створено
+Payment Action Expired,Закінчився термін сесії
+Payment Action Processing,Обробка
+Payment Action Holded,Утримання
+Payment Action Hold confirmed,Утримання підтверджено
+Payment Action Hold completion,Утримання завершується
+Payment Action Paid,Сплачено
+Payment Action Failed,Невдала оплата
+Payment Action Processing void,Обробка скасування
+Payment Action Voided,Скасовано
+Safe Delivery,Безпечна доставка
+Width (cm),Ширина (см)
+Height (cm),Висота (см)
+Depth (cm),Глибина (см)
+Pending,В очікуванні
+Pending Payment,В очікуванні оплати
+Processing,В процесі
+On Hold,На утриманні
+Complete,Виконано
+Closed,Закрито
+Canceled,Скасовано
+Suspected Fraud,Підозра на шахрайство
+Payment Review,Перевірка платежу
+Yes,Так
+No,Ні

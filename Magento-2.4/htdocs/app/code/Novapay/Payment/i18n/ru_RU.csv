@@ -1,0 +1,84 @@
+System message,ru_RU
+Confirm hold amount of the current order,Подтвердите сумму удержания текущего заказа
+Transaction not found,Транзакция не найдена
+Cannot update status,Не удается обновить статус
+Order status updated manually,Статус заказа обновлен вручную
+Order status was not changed,Статус заказа не изменился
+Cannot cancel the payment,Невозможно отменить платеж
+Order payment canceling,Оплата отмененяется
+Cannot confirm hold,Невозможно подтвердить списание
+Confirmed hold by %1,Подтверждено списание на %1 гривен
+Payment confirm hold processing,Подтверждение удержания платежа в процессе
+Incorrect signature on postback %1,Неверная подпись при обратной связи с API %1
+Incorrect signature on postback,Неверная подпись при обратной связи с API
+Order %1 not found,Заказ №%1 не найден
+Order status updated,Статус заказа обновлен
+Order %1 status updated,Заказ №%1 изменил статус
+Status updated by postback to %1,Статус обновлен через обратную связь с API на %1
+Order ID not found,ID заказа не найден
+Payment created already %1,Платеж уже создан %1
+Order status created,Статус заказа Cоздан
+API requests %1,Запросы к АПИ %1
+Order created. Redirecting to payment,Заказ создан. Перенаправление на оплату
+Cannot create payment session,Невозможно создать сеанс оплаты
+Cannot post a payment,Невозможно провести платеж
+Order not found,Заказ не найден
+Gateway rejected the transaction.,Шлюз отклонил транзакцию.
+Select Order Status,Выберите соответствующий статус заказа
+Payment mode Test,Тестовый режим
+Payment mode Live,Рабочий режим
+Payment type Hold,Списание после подтверждения
+Payment type Direct,Прямое списание
+The authorize action is not available.,Действие авторизации недоступно.
+The capture action is not available.,Действие захвата недоступно.
+The refund action is not available.,Действие возврата недоступно.
+Success payment,Успешная оплата
+Fraud payment,Мошенничество
+Check payment status,Проверить статус оплаты
+Do you really want to cancel this order?,Вы действительно хотите отменить этот заказ?
+Cancel payment,Отменить оплату
+Confirm payment,Подтвердить оплату
+Confirm hold amount,Сумма удержания
+Submit confirm hold,Подтвердить удержание платежа
+Place Order,Разместить заказ
+Confirm hold modalbox title,Подтвердите оплату
+"<div class=""novapay-payment-logo""></div><div>Accept payments due to the most convenient and flexible online solutions. Configure the module and let your customers make a secure payment on your website. Track the payment status of each operation at your backoffice and manage the payment transaction.</div>","<div class=""novapay-payment-logo""></div><div>Принимайте платежи благодаря максимально удобным и гибким онлайн-решениям. Настройте модуль и позвольте клиентам совершать безопасные платежи на вашем сайте. Отслеживайте статус оплаты каждой операции в вашем бэк-офисе и управляйте платежной транзакцией.</div>"
+Enabled,Включен
+Credentials,Настройки доступа
+Merchant ID,Идентификатор продавца
+Public key,Открытый ключ
+Private key,Секретный ключ
+Password private key,Пароль для секретного ключа
+Payment options,Опции модуля оплаты
+Title,Заголовок
+Payment type,Тип оплаты
+Payment mode,Режим работы
+Redirects after payment,Переходы после оплаты
+Success Url,Url при успешной оплате
+Fail Url,Url при ошибке оплаты
+Status mapping,Матрица статусов
+Payment Action Created,Создано
+Payment Action Expired,Истек срок сессии
+Payment Action Processing,Обработка
+Payment Action Holded,Удержание
+Payment Action Hold confirmed,Удержание подтверждено
+Payment Action Hold completion,Удержание завершается
+Payment Action Paid,Оплачено
+Payment Action Failed,Неудачная оплата
+Payment Action Processing void,Обработка отмены
+Payment Action Voided,Отменено
+Safe Delivery,Безопасная доставка
+Width (cm),Ширина (см)
+Height (cm),Высота (см)
+Depth (cm),Глубина (см)
+Pending,В ожидании
+Pending Payment,В ожидании оплаты
+Processing,В процессе
+On Hold,На удерживании
+Complete,Выполнен
+Closed,Закрыт
+Canceled,Отменён
+Suspected Fraud,Подозрение на мошенничество
+Payment Review,Проверка платежа
+Yes,Да
+No,Нет

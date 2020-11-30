@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Novapay\Payment\Block\Info">
+        <arguments>
+            <argument name="data" xsi:type="array">
+                <item xsi:type="string" name="is_secure_mode">0</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Sales\Block\Adminhtml\Order\View">
+        <plugin name="Novapay_Payment::sendOrderView" type="Novapay\Payment\Plugin\PluginBtnOrderView" />
+        <plugin disabled="false" name="Novapay_Payment_Plugin_Magento_Sales_Block_Adminhtml_Order_View" sortOrder="10" type="Novapay\Payment\Plugin\Magento\Sales\Block\Adminhtml\Order\View"/>
+    </type>
+
+    <!-- Custom buttons for Order view -->
+    <virtualType name="SalesOrderViewButtons" type="Magento\Backend\Block\Widget\Context">
+        <arguments>
+            <argument name="buttonList" xsi:type="object">Novapay\Payment\Block\Adminhtml\Order\View\ButtonList</argument>
+        </arguments>
+    </virtualType>
+    <type name="Magento\Sales\Block\Adminhtml\Order\View">
+        <arguments>
+            <argument name="context" xsi:type="object">SalesOrderViewButtons</argument>
+        </arguments>
+    </type>
+</config>

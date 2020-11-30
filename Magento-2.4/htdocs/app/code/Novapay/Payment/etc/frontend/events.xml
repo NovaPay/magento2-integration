@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="payment_method_assign_data">
+        <observer name="novapay_payment_data_assign" instance="Novapay\Payment\Observer\DataAssignObserver" />
+    </event>
+    <event name="checkout_onepage_controller_success_action">
+        <observer name="novapay_order_place_after" instance="Novapay\Payment\Observer\OrderPlaceAfter" />
+    </event>
+</config>
