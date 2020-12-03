@@ -44,7 +44,6 @@
 
                     <field id="private_key_pass" translate="label" type="password" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Password private key</label>
-                        <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/private_key_pass</config_path>
                         <can_be_empty>1</can_be_empty>
                     </field>
