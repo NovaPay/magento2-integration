@@ -1,9 +1,9 @@
 <?php
 /**
  * Initial renderer for banner in the System Configuration.
- * 
+ *
  * PHP version 7.X
- * 
+ *
  * @category Module
  * @package  Magento2
  * @author   NovaPay <acquiring@novapay.ua>
@@ -24,7 +24,7 @@ class Init extends Template implements RendererInterface
     /**
      * @var string
      */
-    protected $_template = 'Novapay_Novapay::system/config/fieldset/init.phtml';
+    protected $_template = 'Novapay_Payment::system/config/fieldset/init.phtml';
 
     /**
      * Render fieldset html
