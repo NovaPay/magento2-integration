@@ -1,9 +1,9 @@
 <?php
 /**
  * Initial renderer for banner in the System Configuration.
- *
+ * 
  * PHP version 7.X
- *
+ * 
  * @category Module
  * @package  Magento2
  * @author   NovaPay <acquiring@novapay.ua>
