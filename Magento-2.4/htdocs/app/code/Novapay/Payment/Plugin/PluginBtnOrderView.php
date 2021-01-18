@@ -37,7 +37,13 @@ class PluginBtnOrderView
 
         $this->addUpdateButton();
         $this->addCancelButton();
-        $this->addConfirmButton();
+        if ($this->config->isSecureDeliveryInOrder($this->_order)) {
+            // secure delivery, try to add confirm delivery hold button
+            $this->addConfirmDeliveryButton();
+        } else {
+            // try to add confirm payment hold button
+            $this->addConfirmPaymentButton();
+        }
     }
 
     protected function loadOrder($orderId)
@@ -136,30 +142,25 @@ class PluginBtnOrderView
     }
 
     /**
-     * Adds a confirm hold button to the order view.
+     * Adds a confirm payment hold button to the order view.
      * 
      * @todo No need to add for orders which are not holded.
      * 
      * @return void
      */
-    protected function addConfirmButton()
+    protected function addConfirmPaymentButton()
     {
-        // novapayConfirmHold
+        // novapayConfirmPaymentHold
         $order = $this->getOrder();
         $view  = $this->getView();
         if (!$order || !$view) {
             return;
         }
 
-        if (!$this->canConfirmHold($order)) {
+        if (!$this->canConfirmPaymentHold($order)) {
             return;
         }
 
-        $url = $this->context->getUrl(
-            // '/novapay/checkout/cancel',
-            'adminhtml/novapay/payment/cancel', 
-            ['id' => $order->getEntityId()]
-        );
         // @todo use secure hash or Admin/Controller.
         $url = sprintf(
             '/index.php/admin/novapay?method=confirm&id=%s&amount={amount}', 
@@ -171,9 +172,44 @@ class PluginBtnOrderView
         $view->addButton(
             'confirmpaid',
             [
-                // @todo visible only orders possible to cancel
                 'label' => __('Confirm payment'),
-                'onclick' => "novapayConfirmHold('$amount', '$url')",
+                'onclick' => "novapayConfirmPaymentHold('$amount', '$url')",
+            ]
+        );
+    }
+
+    /**
+     * Adds a confirm delivery hold button to the order view.
+     * 
+     * @todo No need to add for orders which are not holded.
+     * 
+     * @return void
+     */
+    protected function addConfirmDeliveryButton()
+    {
+        // novapayConfirmDeliveryHold
+        $order = $this->getOrder();
+        $view  = $this->getView();
+        if (!$order || !$view) {
+            return;
+        }
+
+        if (!$this->canConfirmDeliveryHold($order)) {
+            return;
+        }
+
+        // @todo use secure hash or Admin/Controller.
+        $url = sprintf(
+            '/index.php/admin/novapay?method=confirm_delivery&id=%s', 
+            $order->getEntityId()
+        );
+
+        $view->addButton(
+            'confirmshipping',
+            [
+                // @todo visible only orders possible to confirm delivery
+                'label' => __('Confirm delivery'),
+                'onclick' => "novapayConfirmDeliveryHold('$url')",
             ]
         );
     }
@@ -235,22 +271,55 @@ class PluginBtnOrderView
     }
 
     /**
-     * Check if it is allowed to confirm hold in the current order.
+     * Check if it is allowed to confirm payment hold in the current order.
      * 
      * @param Order $order Current order.
      * 
      * @return bool        TRUE if allowed to confirm hold, otherwise FALSE.
      */
-    protected function canConfirmHold(Order $order)
+    protected function canConfirmPaymentHold(Order $order)
     {
         // If payment status = Holded
-        $invisible = [
+        $visible = [
             $this->config->getPaymentStatus(Session::STATUS_HOLDED)
         ];
-        if (in_array($order->getStatus(), $invisible)) {
+        if (in_array($order->getStatus(), $visible)) {
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * Check if it is allowed to confirm delivery hold in the current order.
+     * 
+     * @param Order $order Current order.
+     * 
+     * @return bool        TRUE if allowed to confirm hold, otherwise FALSE.
+     */
+    protected function canConfirmDeliveryHold(Order $order)
+    {
+        // If payment status = Holded
+        $visible = [
+            $this->config->getPaymentStatus(Session::STATUS_HOLDED)
+        ];
+        if (!in_array($order->getStatus(), $visible)) {
+            return false;
+        }
+
+        $shipments = $order->getShipmentsCollection();
+        if (!$shipments) {
+            return true;
+        }
+        foreach ($shipments->getItems() as $shipment) {
+            $tracks = $shipment->getAllTracks();
+            foreach ($tracks as $track) {
+                if ('novapay' == $track->getCarrierCode()) {
+                    // already created
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

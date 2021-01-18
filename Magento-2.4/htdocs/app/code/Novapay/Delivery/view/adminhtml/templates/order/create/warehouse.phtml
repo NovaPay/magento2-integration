@@ -1,0 +1,19 @@
+<?php /** @var \Novapay\Delivery\Block\Adminhtml\Warehouse $block */ ?>
+<div class="admin__field">
+    <label for="city_ref" class="admin__field-label"><span><?= __('City') ?></span></label>
+    <div class="admin__field-control">
+        <input class="admin__control-text"
+               type="text" name="city_ref" id="city_ref" readonly="true"/>
+    </div>
+</div>
+<script type="text/javascript">
+    require([
+        'jquery',
+        'mage/calendar'
+    ], function ($) {
+        $(document).ready(function () {
+            var config = <?= $block->getConfig() ?>;
+            console.log('Hello from novapay');
+        });
+    });
+</script>

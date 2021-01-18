@@ -73,7 +73,7 @@
             var redirectUrl;
             var $inputAmount;
 
-            window.novapayConfirmHold = function (amount, url) {
+            window.novapayConfirmPaymentHold = function (amount, url) {
                 var $modal = $("#novapay-confirm-modal");
                 var title = $modal.data('title');
                 $('.novapay-confirm-modal [data-role="title"]').text(title);
@@ -86,7 +86,13 @@
                 window.setTimeout(function () {
                     $inputAmount.focus();
                 }, 500);
-            }
+            };
+
+            window.novapayConfirmDeliveryHold = function (url) {
+                $('body').loader('show');
+                window.setLocation(url);
+                return false;
+            };
 
             var popup = modal(options, $('#novapay-confirm-modal'));
 

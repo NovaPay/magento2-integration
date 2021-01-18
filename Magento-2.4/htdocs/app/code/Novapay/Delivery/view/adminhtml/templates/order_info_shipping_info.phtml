@@ -1,0 +1,24 @@
+<section class="admin__page-section" id="delivery-references-content">
+    <div class="admin__page-section-title">
+        <span class="title"><?= $block->escapeHtml(__('Delivery Warehouse Information')) ?></span>
+    </div>
+    <div class="admin__page-section-content">
+        <div id="city-reference">
+            <strong><?= __('City') ?></strong>
+            <span><?= $block->getCityTitle() ?></span>
+        </div>
+        <div id="warehouse-reference">
+            <strong><?= __('Warehouse') ?>:</strong>
+            <br/>
+            <?= $block->getWarehouseTitle() ?>
+        </div>
+    </div>
+</section>
+<script type="text/javascript">
+    require(
+        ['jquery'],
+        function($) {
+            $('#delivery-references-content').insertAfter($('.order-view-billing-shipping'));
+        }
+    );
+</script>

@@ -70,9 +70,14 @@ define(
             },
 
             isActive: function () {
-                var country  = quote.billingAddress().countryId;
+                // sometimes billingAddress() is null for some reason :(
+                var address  = quote.billingAddress() || quote.shippingAddress();
+                if (!address) {
+                    return false;
+                }
+                var country  = address.countryId;
                 var currency = quote.totals().quote_currency_code;
-                var phone    = quote.billingAddress().telephone;
+                var phone    = address.telephone;
                 if ('UAH' !== currency) {
                     return false;
                 }

@@ -50,7 +50,8 @@ class SessionGetRequest extends Request
      * @param string $merchant_id Merchant ID.
      * @param string $session_id  Session ID.
      */
-    public function __construct($merchant_id, $session_id) {
+    public function __construct($merchant_id, $session_id) 
+    {
         $this->merchant_id = $merchant_id;
         $this->session_id  = $session_id;
     }

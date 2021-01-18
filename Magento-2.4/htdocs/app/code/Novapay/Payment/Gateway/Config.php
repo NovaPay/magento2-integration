@@ -16,6 +16,8 @@ namespace Novapay\Payment\Gateway;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Sales\Model\Order;
+use Novapay\Payment\SDK\Model\Model;
 
 /**
  * Gateway Config class.
@@ -67,5 +69,40 @@ class Config
     public function getPaymentStatus($status)
     {
         return $this->getPaymentConfig("status_$status");
+    }
+
+    /**
+     * Initializes SDK Model to be ready for making requests.
+     *
+     * @return void
+     */
+    public function initModel()
+    {
+        if (Model::MODE_LIVE === $this->getPaymentConfig('mode')) {
+            Model::enableLiveMode();
+        } else {
+            Model::disableLiveMode();
+        }
+        // Enable tracing to use it with Model::getLog() after actions to 
+        // see the curl requests
+        Model::enableTracing();
+
+        Model::setPrivateKey($this->getPaymentConfig('private_key'));
+        Model::setPassword($this->getPaymentConfig('private_key_pass'));
+        Model::setPublicKey($this->getPaymentConfig('public_key'));
+        Model::setMerchantId($this->getPaymentConfig('merchant_id'));;
+    }
+
+    /**
+     * Checks if order has secure delivery
+     *
+     * @param Order $order 
+     *
+     * @return bool
+     */
+    public function isSecureDeliveryInOrder(Order $order)
+    {
+        return 'novapay_novapay' == $order->getShippingMethod()
+               && $order->getWarehouseRef();
     }
 }

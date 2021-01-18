@@ -1,0 +1,30 @@
+"Length unit mm","Од. виміру - міліметр"
+"Length unit cm","Од. виміру - сантиметр"
+"Length unit m","Од. виміру - метр"
+"Weight unit g","Од. виміру - грам"
+"Weight unit kg","Од. виміру - кілограм"
+"Use system product weight","Використовувати масу продукту системи"
+"Cannot calculate shipping cost","Не можу порахувати вартість доставки"
+City,Місто
+"Delivery Warehouse Information","Інформація про доставку"
+Warehouse,Відділення
+"Warehouse city","Місто"
+Search,Шукати
+"Warehouse department","Відділення"
+"Novapay Delivery works in Ukraine only","Доставка Novapay працює тільки в Украине"
+"Novapay Delivery","Доставка Novapay"
+Enabled,Включено
+Title,Заголовок
+"Method Name","Метод"
+"Shipping Cost","Вартість доставки"
+"Length unit","Од. вимірювання відстаней"
+Width,Довжина
+Height,Ширина
+Depth,Глибина
+"Weight unit","Од. вимірювання мас"
+Weight,Маса
+"Sort Order","Порядок"
+"City reference","Місто (код)"
+"City title","Місто"
+"Warehouse reference","Відділення (код)"
+"Warehouse title","Відділення"

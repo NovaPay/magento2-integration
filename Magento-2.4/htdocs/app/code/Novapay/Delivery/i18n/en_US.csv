@@ -1,0 +1,30 @@
+"Length unit mm","Length unit mm"
+"Length unit cm","Length unit cm"
+"Length unit m","Length unit m"
+"Weight unit g","Weight unit g"
+"Weight unit kg","Weight unit kg"
+"Use system product weight","Use system product weight"
+"Cannot calculate shipping cost","Cannot calculate shipping cost"
+City,City
+"Delivery Warehouse Information","Delivery Warehouse Information"
+Warehouse,Warehouse
+"Warehouse city","Warehouse city"
+Search,Search
+"Warehouse department","Warehouse department"
+"Novapay Delivery works in Ukraine only","Novapay Delivery works in Ukraine only"
+"Novapay Delivery","Novapay Delivery"
+Enabled,Enabled
+Title,Title
+"Method Name","Method Name"
+"Shipping Cost","Shipping Cost"
+"Length unit","Length unit"
+Width,Width
+Height,Height
+Depth,Depth
+"Weight unit","Weight unit"
+Weight,Weight
+"Sort Order","Sort Order"
+"City reference","City (ref)"
+"City title","City"
+"Warehouse reference","Warehouse (ref)"
+"Warehouse title","Warehouse"

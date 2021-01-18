@@ -13,7 +13,6 @@
 
 namespace Novapay\Payment\Model\Adminhtml\Source;
 
-use Magento\Payment\Model\Method\AbstractMethod;
 use Magento\Framework\Option\ArrayInterface;
 use Magento\Sales\Model\ResourceModel\Order\Status\CollectionFactory;
 
@@ -28,9 +27,7 @@ use Magento\Sales\Model\ResourceModel\Order\Status\CollectionFactory;
  */
 class PaymentAction implements ArrayInterface
 {
-    // const ACTION_ORDER = 'order';
-    // const ACTION_AUTHORIZE = 'authorize';
-    // const ACTION_AUTHORIZE_CAPTURE = 'authorize_capture';
+    protected $statusCollectionFactory;
 
     /**
      * @param CollectionFactory $statusCollectionFactory

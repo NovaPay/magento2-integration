@@ -55,3 +55,4 @@ bin/magento-cli i18n:collect-phrases -o app/code/Novapay/Payment/i18n/xx_YY.csv 
 - https://qecom.novapay.ua/pay?sid=1dfc2c8c-e95b-45a4-87a3-30c5fef8f888
 - https://qecom.novapay.ua/pay?sid=f88a70ec-b572-475b-8e9d-264b03323dd9
 - https://qecom.novapay.ua/pay?sid=1c0d82e3-cdb0-4993-9355-b700ce766278
+- https://qecom.novapay.ua/pay?sid=97586480-178c-4aac-8fa6-528bbdb5cf48

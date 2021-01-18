@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Novapay delivery method.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="Novapay\Delivery\Api\ShipmentEstimationInterface" type="Novapay\Delivery\Model\Carrier\Novapay" />
+
+    <preference for="Novapay\Delivery\Api\CitiesManagerInterface" type="Novapay\Delivery\Model\CitiesManager" />
+    <preference for="Novapay\Delivery\Api\Data\CityInterface" type="Novapay\Delivery\Model\City" />
+    <preference for="Novapay\Delivery\Api\Data\WarehouseInterface" type="Novapay\Delivery\Model\Warehouse" />
+    <preference for="Novapay\Delivery\Api\Data\CalculationInterface" type="Novapay\Delivery\Model\Calculation" />
+
+    <type name="Magento\Checkout\Model\ShippingInformationManagement">
+        <plugin name="novapay_save_references_in_quote" type="Novapay\Delivery\Plugin\Checkout\Model\ShippingInformationManagement" sortOrder="1"/>
+    </type>
+<!-- 
+    <virtualType name="Magento\Sales\Model\ResourceModel\Order\Grid" type="Magento\Sales\Model\ResourceModel\Grid">
+        <arguments>
+            <argument name="columns" xsi:type="array">
+                <item name="city_ref" xsi:type="string">sales_order.city_ref</item>
+                <item name="city_title" xsi:type="string">sales_order.city_title</item>
+                <item name="warehouse_ref" xsi:type="string">sales_order.warehouse_ref</item>
+                <item name="warehouse_title" xsi:type="string">sales_order.warehouse_title</item>
+            </argument>
+        </arguments>
+    </virtualType>
+ -->
+<!-- 
+    <type name="Magento\Checkout\Model\ShippingInformationManagement">
+        <plugin name="Novapay_Delivery/save-city-and-warehouse-in-quote" type="Novapay\Delivery\Plugin\Checkout\Model\ShippingInformationManagement" sortOrder="1"/>
+    </type>
+ -->
+</config>

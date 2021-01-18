@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="shipping_method">
+            <block class="Novapay\Delivery\Block\Adminhtml\Warehouse"
+                   template="Novapay_Delivery::order/create/warehouse.phtml"
+                   name="warehouse" as="warehouse" after="-"/>
+        </referenceBlock>
+    </body>
+</page>

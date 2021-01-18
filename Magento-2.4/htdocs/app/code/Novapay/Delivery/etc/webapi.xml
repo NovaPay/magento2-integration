@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
+
+    <!-- Managing Novapay city/warehouse search -->
+    <route url="/V1/guest-carts/shipping/novapay/cities/:q" method="GET">
+        <service class="Novapay\Delivery\Api\CitiesManagerInterface" method="search"/>
+        <resources>
+            <resource ref="anonymous" />
+        </resources>
+    </route>
+    <route url="/V1/guest-carts/shipping/novapay/warehouses/:cityRef" method="GET">
+        <service class="Novapay\Delivery\Api\CitiesManagerInterface" method="getWarehouses"/>
+        <resources>
+            <!-- <resource ref="self" /> -->
+            <resource ref="anonymous" />
+            <!-- <resource ref="Magento_Cart::manage" /> -->
+        </resources>
+    </route>
+    <route url="/V1/guest-carts/:cartId/shipping/novapay/calculate/:cityRef/:warehouseRef/:cityTitle/:warehouseTitle" method="GET">
+        <service class="Novapay\Delivery\Api\CitiesManagerInterface" method="calculate"/>
+        <resources>
+            <!-- <resource ref="self" /> -->
+            <resource ref="anonymous" />
+            <!-- <resource ref="Magento_Cart::manage" /> -->
+        </resources>
+    </route>
+</routes>

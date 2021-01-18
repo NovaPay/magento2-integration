@@ -30,6 +30,7 @@ use Novapay\Payment\SDK\Model\Model;
 use Novapay\Payment\SDK\Model\Payment;
 use Novapay\Payment\SDK\Model\Session;
 use Novapay\Payment\SDK\Schema\Response\Error\Error as ResponseError;
+use Novapay\Delivery\Gateway\Config as DeliveryConfig;
 
 /**
  * Payment Post controller class.
@@ -227,31 +228,37 @@ class Index extends AbstractCheckoutAction
     protected function createPayment(Session $session, OrderInterface $order)
     {
         $payment = new Payment();
+        $delivery = $this->getShippingDelivery($order);
+
+        $total = $order->getSubtotal();
 
         $items = [];
-        foreach ($order->getAllItems() as $item) {
+        foreach ($order->getAllVisibleItems() as $item) {
             $items[] = new Product(
                 $item->getName(),
-                $item->getPrice(),
+                $item->getRowTotalInclTax(),
                 $item->getQtyOrdered()
             );
         }
 
-        if ($order->getShippingAmount() > 0) {
+        // Secure delivery version adding shipping amount on payment processing side
+        if (!$delivery && $order->getShippingAmount() > 0) {
             $items[] = new Product(
                 $order->getShippingDescription(),
                 $order->getShippingAmount(),
                 1
             );
+            $total += $order->getShippingAmount();
         }
 
         $ok = $payment->create(
             $this->getPaymentConfig('merchant_id'),
             $session->id,
             $items,
-            $order->getGrandTotal(),
+            $total,
             PaymentType::HOLD == $this->getPaymentConfig('payment_type'),
-            $order->getRealOrderId()
+            $order->getRealOrderId(),
+            $delivery
         );
 
         if (!$ok) {
@@ -265,7 +272,8 @@ class Index extends AbstractCheckoutAction
                             ? $res->message
                             : __('Cannot post a payment')
                     ],
-                    'method' => 'createSession',
+                    'method' => 'createPayment',
+                    'shipping' => $delivery
                     // @todo remove
                     // 'request'  => $payment->getRequest(),
                     // 'response' => $res,
@@ -327,22 +335,26 @@ class Index extends AbstractCheckoutAction
         return $invoice;
     }
 
-    // /**
-    //  * Returns payment config values in an array.
-    //  *
-    //  * @return array Payment config values.
-    //  */
-    // private function _getPaymentConfig()
-    // {
-    //     return array(
-    //         'private_key'  => $this->helper()->getPaymentConfig('private_key'),
-    //         'public_key'   => $this->helper()->getPaymentConfig('public_key'),
-    //         'merchant_id'  => $this->helper()->getPaymentConfig('merchant_id'),
-    //         'mode'         => $this->helper()->getPaymentConfig('mode'),
-    //         'payment_type' => $this->helper()->getPaymentConfig('payment_type'),
-    //         'success_url'  => $this->helper()->getPaymentConfig('success_url'),
-    //         'fail_url'     => $this->helper()->getPaymentConfig('fail_url'),
-    //         'password'     => $this->helper()->getPaymentConfig('private_key_pass')
-    //     );
-    // }
+    /**
+     * Returns Delivery schema object for current order.
+     *
+     * @param OrderInterface $order Order object.
+     *
+     * @return Novapay\Payment\SDK\Schema\Delivery|null The delivery schema object.
+     */
+    protected function getShippingDelivery(OrderInterface $order)
+    {
+        $method = $order->getShippingMethod();
+        if ('novapay_novapay' != $method) {
+            return null;
+        }
+        if (!class_exists(DeliveryConfig::class)) {
+            return null;
+        }
+
+        // wrong way of using factory, just because of dependency on another module
+        $config = new DeliveryConfig($this->scopeConfig, $this->getObjectManager());
+        $ship = $config->getDeliveryForOrder($order);
+        return $ship->delivery;
+    }
 }

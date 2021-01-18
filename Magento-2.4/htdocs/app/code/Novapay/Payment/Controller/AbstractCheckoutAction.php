@@ -21,12 +21,11 @@ use Magento\Sales\Api\Data\TransactionInterface;
 use Magento\Sales\Api\Data\TransactionSearchResultInterfaceFactory;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Quote\Model\QuoteFactory;
-use Magento\Store\Model\ScopeInterface;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface;
 use Magento\Sales\Model\Service\InvoiceService;
 use Psr\Log\LoggerInterface;
-use Novapay\Payment\SDK\Model\Model;
 use Novapay\Payment\SDK\Model\Session as SessionSDK;
+use Novapay\Payment\Gateway\Config;
 
 /**
  * AbstractCheckoutAction controller class.
@@ -68,6 +67,7 @@ abstract class AbstractCheckoutAction extends AbstractAction
      * @param Magento\Checkout\Model\Session                                 $checkoutSession    Checkout session.
      * @param Magento\Sales\Model\OrderFactory                               $orderFactory       Order factory.
      * @param Magento\Framework\App\Config\ScopeConfigInterface              $scopeConfig        Scope config.
+     *                                                                                           Used for initializing DeliveryConfig($this->scopeConfig).
      * @param Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface $transactionBuilder Transaction builder.
      * @param Magento\Sales\Model\Service\InvoiceService                     $invoiceService     Invoice service.
      */
@@ -81,7 +81,8 @@ abstract class AbstractCheckoutAction extends AbstractAction
         ScopeConfigInterface $scopeConfig,
         BuilderInterface $transactionBuilder,
         InvoiceService $invoiceService,
-        TransactionSearchResultInterfaceFactory $transactionSearch
+        TransactionSearchResultInterfaceFactory $transactionSearch,
+        Config $config
     ) {
         parent::__construct($context, $logger, $resultFactory);
         $this->checkoutSession    = $checkoutSession;
@@ -91,6 +92,7 @@ abstract class AbstractCheckoutAction extends AbstractAction
         $this->transactionBuilder = $transactionBuilder;
         $this->invoiceService     = $invoiceService;
         $this->transactionSearch  = $transactionSearch;
+        $this->config             = $config;
     }
 
     /**
@@ -141,11 +143,7 @@ abstract class AbstractCheckoutAction extends AbstractAction
      */
     protected function getPaymentConfig($name)
     {
-        // @todo change to Novapay\Payment\Gateway\Config->getValue();
-        return $this->scopeConfig->getValue(
-            "payment/novapayment_gateway/$name",
-            ScopeInterface::SCOPE_STORE
-        );
+        return $this->config->getPaymentConfig($name);
     }
 
     /**
@@ -158,7 +156,7 @@ abstract class AbstractCheckoutAction extends AbstractAction
      */
     protected function getPaymentStatus($status)
     {
-        return $this->getPaymentConfig("status_$status");
+        return $this->config->getPaymentStatus($status);
     }
 
     /**
@@ -169,19 +167,7 @@ abstract class AbstractCheckoutAction extends AbstractAction
      */
     protected function initPaymentModel()
     {
-        // @todo fix test mode
-        if (Model::MODE_LIVE === $this->getPaymentConfig('mode')) {
-            Model::enableLiveMode();
-        } else {
-            Model::disableLiveMode();
-        }
-        // Enable tracing to use it with Model::getLog() after actions to 
-        // see the curl requests
-        Model::enableTracing();
-
-        Model::setPrivateKey($this->getPaymentConfig('private_key'));
-        Model::setPassword($this->getPaymentConfig('private_key_pass'));
-        Model::setPublicKey($this->getPaymentConfig('public_key'));
+        $this->config->initModel();
     }
 
     /**
