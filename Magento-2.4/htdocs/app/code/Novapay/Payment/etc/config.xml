@@ -10,15 +10,12 @@
         <payment>
             <novapayment_gateway>
                 <title>Novapay Payment Gateway</title>
-                <debug>1</debug>
+                <debug>0</debug>
                 <active>1</active>
+                <is_live>0</is_live>
                 <model>Novapay\Payment\Model\Method\Payment</model>
 
-                <!-- <merchant_gateway_key backend_model="Magento\Config\Model\Config\Backend\Encrypted" /> -->
-
                 <order_status>pending_payment</order_status>
-
-                <!-- <payment_action>authorize</payment_action> -->
 
                 <currency>UAH</currency>
                 <can_authorize>1</can_authorize>
@@ -28,10 +25,6 @@
                 <is_gateway>1</is_gateway>
                 <sort_order>1</sort_order>
                 <debugReplaceKeys>MERCHANT_KEY</debugReplaceKeys>
-
-                <!-- <paymentInfoKeys>FRAUD_MSG_LIST</paymentInfoKeys> -->
-                <!-- <privateInfoKeys>FRAUD_MSG_LIST</privateInfoKeys> -->
-
             </novapayment_gateway>
         </payment>
 

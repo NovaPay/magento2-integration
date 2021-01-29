@@ -84,3 +84,5 @@ Yes,Так
 No,Ні
 "Confirm delivery","Підтвердити доставку"
 "Delivery confirmation created","Підтвердження доставки проведено"
+Live mode,Робочий режим
+Debug requests,Відстежувати запити

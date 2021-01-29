@@ -98,33 +98,17 @@ class Postback extends AbstractCheckoutAction implements CsrfAwareActionInterfac
         $response = $postback->getResponse();
         $response->setUrl($url)->setMethod($method);
 
+        $extraLog = [];
         $curl = new Curl();
+        if ($this->getPaymentConfig('debug')) {
+            $extraLog = [
+                'request'  => $curl->render($request),
+                'response' => $curl->render($response),
+            ];
+            $this->logPostback($extraLog['request'], $extraLog['response']);
+        }
 
-        $fp = fopen($_SERVER['DOCUMENT_ROOT'] . '/var/log/novapay-postback.log', 'a+');
-        fputs(
-            $fp, 
-            sprintf(
-                "%s\n\n%s\n",
-                $curl->render($request),
-                $curl->render($response)
-                // "%s\n--\n%s %s %s\n%s\n--\n\n", 
-                // date('c'), 
-                // $protocol,
-                // $status,
-                // $method,
-                // implode(
-                //     "\n\n", 
-                //     [
-                //         json_encode($headers, JSON_UNESCAPED_UNICODE), 
-                //         $input,
-                //     ]
-                // )
-            )
-        );
-        fclose($fp);
-
-        // @todo enable signature verification
-        if (false && !$postback->verify()) {
+        if (!$postback->verify()) {
             // incorrect signature
             $this->logger->critical(
                 __(
@@ -133,14 +117,14 @@ class Postback extends AbstractCheckoutAction implements CsrfAwareActionInterfac
                 )
             );
             $result->setHttpResponseCode(401);
-            $result->setData(
-                [
-                    'messages' => [__('Incorrect signature on postback')],
-                    'request'  => $curl->render($request),
-                    'response' => $curl->render($response),
-                    'headers'  => $response->getHeaders()
-                ]
-            );
+            $data = [
+                'messages' => [__('Incorrect signature on postback')],
+                'headers'  => $response->getHeaders()
+            ];
+            if ($this->getPaymentConfig('debug')) {
+                $data = array_merge($data, $extraLog);
+            }
+            $result->setData($data);
             return $result;
         }
 
@@ -164,7 +148,7 @@ class Postback extends AbstractCheckoutAction implements CsrfAwareActionInterfac
             return $result;
         }
 
-        $status = $this->getPaymentConfig('status_' . $request->status);
+        $status = $this->getPaymentStatus($request->status);
         $order->setState($status)->setStatus($status);
         $order->addStatusToHistory($status, __('Order status updated'));
         $order->save();

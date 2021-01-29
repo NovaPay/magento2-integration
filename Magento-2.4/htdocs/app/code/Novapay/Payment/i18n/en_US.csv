@@ -84,3 +84,5 @@ Yes,Yes
 No,No
 "Confirm delivery","Confirm delivery"
 "Delivery confirmation created","Delivery confirmation created"
+Live mode,Live mode
+Debug requests,Debug requests

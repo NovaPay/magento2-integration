@@ -160,6 +160,29 @@ abstract class AbstractCheckoutAction extends AbstractAction
     }
 
     /**
+     * Log postback request.
+     *
+     * @param string $request  Postback request.
+     * @param string $response Postback response.
+     * 
+     * @return bool            TRUE on success, FALSE on failure.
+     */
+    protected function logPostback($request, $response)
+    {
+        $file = $_SERVER['DOCUMENT_ROOT'] . '/var/log/novapay-postback.log';
+        $fp = fopen($file, 'a+');
+        if (!$fp) {
+            return false;
+        }
+        fputs(
+            $fp, 
+            sprintf("%s\n\n%s\n", $request, $response)
+        );
+        fclose($fp);
+        return true;
+    }
+
+    /**
      * Prepare (initialise) SDK\Model\Model with config values stored in the 
      * website/store settings.
      * 

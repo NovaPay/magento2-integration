@@ -78,14 +78,16 @@ class Config
      */
     public function initModel()
     {
-        if (Model::MODE_LIVE === $this->getPaymentConfig('mode')) {
+        if ($this->getPaymentConfig('is_live')) {
             Model::enableLiveMode();
         } else {
             Model::disableLiveMode();
         }
         // Enable tracing to use it with Model::getLog() after actions to 
         // see the curl requests
-        Model::enableTracing();
+        if ($this->getPaymentConfig('debug')) {
+            Model::enableTracing();
+        }
 
         Model::setPrivateKey($this->getPaymentConfig('private_key'));
         Model::setPassword($this->getPaymentConfig('private_key_pass'));

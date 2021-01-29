@@ -15,6 +15,7 @@ class PluginBtnOrderView
 {
     protected $context;
     protected $config;
+    protected $urlBuilder;
 
     private $_orderFactory;
     private $_order;
@@ -23,11 +24,13 @@ class PluginBtnOrderView
     public function __construct(
         OrderFactory $orderFactory, 
         ContextInterface $context,
-        Config $config
+        Config $config,
+        \Magento\Framework\UrlInterface $urlBuilder
     ) {
         $this->_orderFactory = $orderFactory;
         $this->context       = $context;
         $this->config        = $config;
+        $this->urlBuilder    = $urlBuilder;
     }
 
     public function beforeSetLayout(View $subject)
@@ -80,16 +83,11 @@ class PluginBtnOrderView
 
         // @todo check if order (transaction) is closed already no need to show this button
         //       or make it disabled
-        $url = $this->context->getUrl(
-            // '/novapay/checkout/order?id=%s',
-            'adminhtml/novapay', 
-            [
-                'method' => 'update',
-                'id' => $order->getEntityId()
-            ]
-        );
-        // @todo use secure hash or Admin/Controller.
-        $url = sprintf('/index.php/admin/novapay?method=update&id=%s', $order->getEntityId());
+        $query = [
+            'method' => 'update',
+            'id' => $order->getEntityId()
+        ];
+        $url = $this->urlBuilder->getUrl('novapay', $query);
         $view->addButton(
             'updatestatus',
             [
@@ -121,15 +119,11 @@ class PluginBtnOrderView
         }
 
         $message = __('Do you really want to cancel this order?');
-        // $url2 = '/novapay/checkout/cancel?id=' . $orderId;
-
-        $url = $this->context->getUrl(
-            // '/novapay/checkout/cancel',
-            'adminhtml/novapay/payment/cancel', 
-            ['id' => $order->getEntityId()]
-        );
-        // @todo use secure hash or Admin/Controller.
-        $url = sprintf('/index.php/admin/novapay?method=cancel&id=%s', $order->getEntityId());
+        $query = [
+            'method' => 'cancel',
+            'id' => $order->getEntityId()
+        ];
+        $url = $this->urlBuilder->getUrl('novapay', $query);
 
         $view->addButton(
             'cancelpaid',
@@ -161,11 +155,12 @@ class PluginBtnOrderView
             return;
         }
 
-        // @todo use secure hash or Admin/Controller.
-        $url = sprintf(
-            '/index.php/admin/novapay?method=confirm&id=%s&amount={amount}', 
-            $order->getEntityId()
-        );
+        $query = [
+            'method' => 'confirm',
+            'id' => $order->getEntityId(),
+            'amount' => '-amount-'
+        ];
+        $url = $this->urlBuilder->getUrl('novapay', $query);
 
         $amount = sprintf('%.2f', $order->getGrandTotal());
 
@@ -198,11 +193,11 @@ class PluginBtnOrderView
             return;
         }
 
-        // @todo use secure hash or Admin/Controller.
-        $url = sprintf(
-            '/index.php/admin/novapay?method=confirm_delivery&id=%s', 
-            $order->getEntityId()
-        );
+        $query = [
+            'method' => 'confirm_delivery',
+            'id' => $order->getEntityId(),
+        ];
+        $url = $this->urlBuilder->getUrl('novapay', $query);
 
         $view->addButton(
             'confirmshipping',

@@ -82,6 +82,6 @@ class AuthorizationRequest implements BuilderInterface
     {
         // @todo use another way
         return (isset($_SERVER['HTTPS']) ? 'https://' : 'http://')
-                . $_SERVER['HTTP_HOST'] . '/novapay/checkout/postback';
+                . $_SERVER['HTTP_HOST'] . '/novapay/payment/postback';
     }
 }

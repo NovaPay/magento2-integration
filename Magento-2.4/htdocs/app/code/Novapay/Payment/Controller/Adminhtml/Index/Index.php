@@ -1,7 +1,4 @@
 <?php
-
-// http://magento-dev.sprinterra.com/index.php/admin/novapay/payment/index/index
-
 namespace Novapay\Payment\Controller\Adminhtml\Index;
 
 use Magento\Framework\Controller\ResultFactory;
@@ -82,7 +79,7 @@ class Index extends AbstractCheckoutAction
             $this->messageManager->addErrorMessage(__('Cannot update status'));
             return $this->goBack($order);
         }
-        $status = $this->getPaymentConfig('status_' . $session->status);
+        $status = $this->getPaymentStatus($session->status);
 
         if ($order->getStatus() !== $status) {
             $order->setState($status)->setStatus($status);
@@ -131,7 +128,7 @@ class Index extends AbstractCheckoutAction
             return $this->goBack($order);
         }
 
-        $status = $this->getPaymentConfig('status_' . Session::STATUS_VOIDING);
+        $status = $this->getPaymentStatus(Session::STATUS_VOIDING);
         if ($order->getStatus() !== $status) {
             $order->setState($status)->setStatus($status);
             $order->addStatusToHistory(
@@ -166,10 +163,6 @@ class Index extends AbstractCheckoutAction
         if ($amount <= 0) {
             return $this->goBack($order);
         }
-
-        // $session = new Session();
-        // $session->id = $transaction->getTxnId();
-        // $session->status($this->getPaymentConfig('merchant_id'));
 
         $payment = new Payment();
         $ok = $payment->complete(

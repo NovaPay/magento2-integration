@@ -54,14 +54,14 @@
                 <group id="options" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Payment options</label>
 
-                    <field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <field id="title" translate="label" type="text" sortOrder="21" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Title</label>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/title</config_path>
                         <can_be_empty>0</can_be_empty>
                     </field>
 
-                    <field id="payment_type" translate="label" type="select" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <field id="payment_type" translate="label" type="select" sortOrder="22" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Payment type</label>
                         <comment>
                             On when payment type is Hold safe delivery is available.
@@ -72,26 +72,38 @@
                         <can_be_empty>0</can_be_empty>
                     </field>
 
-                    <field id="mode" translate="label" type="select" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Payment mode</label>
-                        <source_model>Novapay\Payment\Model\Adminhtml\Source\PaymentMode</source_model>
-                        <config_path>payment/novapayment_gateway/mode</config_path>
+                    <field id="is_live" translate="label" type="select" sortOrder="23" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Live mode</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <validate>required-entry</validate>
+                        <config_path>payment/novapayment_gateway/is_live</config_path>
+                    </field>
+
+                    <field id="debug" translate="label" type="select" sortOrder="24" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Debug requests</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/novapayment_gateway/debug</config_path>
+                    </field>
+
+                    <field id="sort_order" translate="label" type="text" sortOrder="25" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Sort Order</label>
+                        <validate>validate-number validate-zero-or-greater</validate>
                     </field>
 
                     <depends>
                         <field id="active">1</field>
                     </depends>
                 </group>
-                <group id="redirects" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <group id="redirects" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Redirects after payment</label>
-                    <field id="success_url" translate="label" type="text" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <field id="success_url" translate="label" type="text" sortOrder="21" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Success Url</label>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/success_url</config_path>
                         <can_be_empty>0</can_be_empty>
                     </field>
 
-                    <field id="fail_url" translate="label" type="text" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <field id="fail_url" translate="label" type="text" sortOrder="22" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Fail Url</label>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/fail_url</config_path>

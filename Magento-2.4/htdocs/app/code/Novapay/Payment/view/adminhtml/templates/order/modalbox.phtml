@@ -107,7 +107,7 @@
                     return false;
                 }
                 $('body').loader('show');
-                window.setLocation(redirectUrl.replace('{amount}', amount));
+                window.setLocation(redirectUrl.replace('-amount-', amount));
                 return false;
             });
         }

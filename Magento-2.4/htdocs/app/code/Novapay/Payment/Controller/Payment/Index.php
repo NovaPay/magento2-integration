@@ -51,6 +51,10 @@ class Index extends AbstractCheckoutAction
     public function execute()
     {
         $order  = $this->getOrder();
+        // @todo remove this test
+        // $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
+        // $result->setData(['order' => $order]);
+        // return $result;
 
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
         if (!$order || !$order->getEntityId()) {
@@ -92,7 +96,7 @@ class Index extends AbstractCheckoutAction
 
         $invoice = $this->createInvoice($order, $transaction);
 
-        $status = $this->getPaymentConfig('status_created');
+        $status = $this->getPaymentStatus(Session::STATUS_CREATED);
         $order->setState($status)->setStatus($status);
         $order->addStatusToHistory($status, __('Order status created'));
         $order->save();
@@ -165,20 +169,18 @@ class Index extends AbstractCheckoutAction
             $res = $session->getResponse();
             $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
             $result->setHttpResponseCode(406);
-            $result->setData(
-                [
-                    'errors' => [
-                        $res instanceof ResponseError
-                            ? $res->message
-                            : __('Cannot create payment session')
-                    ],
-                    'method' => 'createSession',
-                    // @todo remove
-                    // 'request'  => $session->getRequest(),
-                    // 'response' => $res,
-                    // 'log'      => Model::getLog()
-                ]
-            );
+            $data = [
+                'errors' => [
+                    $res instanceof ResponseError
+                        ? $res->message
+                        : __('Cannot create payment session')
+                ],
+                'method' => 'createSession'
+            ];
+            if ($this->getPaymentConfig('debug')) {
+                $data = array_merge($data, $this->getDebugInfo());
+            }
+            $result->setData($data);
             return $result;
         }
 
@@ -265,24 +267,34 @@ class Index extends AbstractCheckoutAction
             $res = $payment->getResponse();
             $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
             $result->setHttpResponseCode(406);
-            $result->setData(
-                [
-                    'errors' => [
-                        $res instanceof ResponseError
-                            ? $res->message
-                            : __('Cannot post a payment')
-                    ],
-                    'method' => 'createPayment',
-                    'shipping' => $delivery
-                    // @todo remove
-                    // 'request'  => $payment->getRequest(),
-                    // 'response' => $res,
-                    // 'log'      => Model::getLog()
-                ]
-            );
+            $data = [
+                'errors' => [
+                    $res instanceof ResponseError
+                        ? $res->message
+                        : __('Cannot post a payment')
+                ],
+                'method' => 'createPayment',
+                'shipping' => $delivery
+            ];
+            if ($this->getPaymentConfig('debug')) {
+                $data = array_merge($data, $this->getDebugInfo());
+            }
+            $result->setData($data);
             return $result;
         }
         return $payment;
+    }
+
+    protected function getDebugInfo()
+    {
+        return [
+            'options' => [
+                'title' => $this->getPaymentConfig('title'),
+                'mode'  => $this->getPaymentConfig('mode'),
+                'is_live' => $this->getPaymentConfig('is_live'),
+            ],
+            'log' => Model::getLog()
+        ];
     }
 
     /**
