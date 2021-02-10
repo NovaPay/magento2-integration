@@ -54,8 +54,8 @@ Title,Заголовок
 Payment type,Тип оплати
 Payment mode,Режим роботи
 Redirects after payment,Переходи після оплати
-Success Url,Url при успішну оплату
-Fail Url,Url при помилку оплати
+Success Url,Url успішної оплати
+Fail Url,Url помилки оплати
 Status mapping,Матриця статусів
 Payment Action Created,Створено
 Payment Action Expired,Закінчився термін сесії
@@ -86,3 +86,19 @@ No,Ні
 "Delivery confirmation created","Підтвердження доставки проведено"
 Live mode,Робочий режим
 Debug requests,Відстежувати запити
+
+"When Novapay Delivery is used payment type is Secure Delivery Hold and cannot be selected here.","Коли використовується доставка Novapay, тип оплати - Захищена доставка і не може бути вибраний тут."
+"YES = production mode, NO = test mode.","ТАК = робочий режим, НІ = тестовий режим."
+"Used to debug API information during development.","Використовується для налагодження інформації API під час розробки."
+"Url of the page where user should be redirected after successfull payment.","URL-адреса сторінки, куди користувач повинен бути перенаправлений після успішної оплати."
+"Url of the page where user should be redirected after failed payment.","URL-адреса сторінки, куди користувач повинен бути перенаправлений після невдалої оплати."
+"When payment has been created {created}.","Коли платіж створено {created}."
+"When session has been expired {expired}.","Коли термін дії сеансу закінчився {expired}."
+"When payment is processing {processing}.","Коли оплата обробляється {processing}."
+"When payment is being held {holded}.","Коли проводиться оплата {holded}."
+"When payment hold has been confirmed {hold_confirmed}.","Коли підтвердження затримки платежу підтверджено {hold_confirmed}."
+"When payment hold is completing {processing_hold_completion}.","Коли затримка платежу завершується {processing_hold_completion}."
+"When payment has been paid {paid}.","Коли оплата сплачена {paid}."
+"When payment has failed {failed}.","Коли платіж не вдався {failed}."
+"When payment is canceling {processing_void}.","Коли оплата скасовується {processing_void}."
+"When payment has been canceled {voided}.","Коли оплата скасована {voided}."

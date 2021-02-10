@@ -86,3 +86,19 @@ No,Нет
 "Delivery confirmation created","Подтверждение доставки проведено"
 Live mode,Рабочий режим
 Debug requests,Отслеживать запросы
+
+"When Novapay Delivery is used payment type is Secure Delivery Hold and cannot be selected here.","Когда используется доставка Novapay, тип оплаты - Безопасное удержание доставки, и его нельзя здесь выбрать."
+"YES = production mode, NO = test mode.","ДА = производственный режим, НЕТ = тестовый режим."
+"Used to debug API information during development.","Используется для отладки информации API во время разработки."
+"Url of the page where user should be redirected after successfull payment.","URL страницы, на которую следует перенаправить пользователя после успешной оплаты."
+"Url of the page where user should be redirected after failed payment.","URL страницы, на которую нужно перенаправить пользователя после неудачной оплаты."
+"When payment has been created {created}.","Когда платеж был создан {created}."
+"When session has been expired {expired}.","Когда сессия истекла {expired}."
+"When payment is processing {processing}.","Во время обработки платежа {processing}."
+"When payment is being held {holded}.","Когда происходит оплата {holded}."
+"When payment hold has been confirmed {hold_confirmed}.","Когда задержка платежа подтверждена {hold_confirmed}."
+"When payment hold is completing {processing_hold_completion}.","Когда задержка платежей завершается {processing_hold_completion}."
+"When payment has been paid {paid}.","Когда оплата была произведена {paid}."
+"When payment has failed {failed}.","Когда платеж не прошел {failed}."
+"When payment is canceling {processing_void}.","Когда платеж отменяется {processing_void}."
+"When payment has been canceled {voided}.","Когда платеж был отменен {voided}."

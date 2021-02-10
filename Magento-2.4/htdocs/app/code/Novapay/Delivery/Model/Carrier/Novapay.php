@@ -141,6 +141,8 @@ class Novapay extends AbstractCarrier implements CarrierInterface, ShipmentEstim
             return false;
         }
 
+        $shippingCost = (float) $this->getConfigData('shipping_cost');
+
         $title = $this->getConfigData('name');
         if ($quote && $quote->getWarehouseTitle()) {
             $title = sprintf(
@@ -148,6 +150,7 @@ class Novapay extends AbstractCarrier implements CarrierInterface, ShipmentEstim
                 $quote->getCityTitle(),
                 preg_replace('/([\:\(].+)$/', '', $quote->getWarehouseTitle())
             );
+            $shippingCost = $this->getShippingCost($quote);
         }
 
         /** @var \Magento\Shipping\Model\Rate\Result $result */
@@ -166,9 +169,6 @@ class Novapay extends AbstractCarrier implements CarrierInterface, ShipmentEstim
 
         $method->setMethod($this->_code);
         $method->setMethodTitle($title);
-
-        $shippingCost = (float)$this->getConfigData('shipping_cost');
-        $shippingCost = $this->getShippingCost($quote);
 
         if ($this->hasError()) {
             $method->setError($this->getError());

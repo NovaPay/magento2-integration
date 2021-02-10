@@ -41,22 +41,7 @@ class AddHtmlToOrderShippingBlock implements ObserverInterface
      */
     public function execute(EventObserver $observer)
     {
-        if ($observer->getElementName() != $this->getPlaceName()) {
-            return $this;
-        }
-        $orderShippingViewBlock = $observer->getLayout()->getBlock($observer->getElementName());
-        $order = $orderShippingViewBlock->getOrder();
-
-        /** @var \Magento\Framework\View\Element\Template $deliveryDateBlock */
-        $warehouseBlock = $this->templateFactory->create();
-        $warehouseBlock->setCityRef($order->getCityRef());
-        $warehouseBlock->setCityTitle($order->getCityTitle());
-        $warehouseBlock->setWarehouseRef($order->getWarehouseRef());
-        $warehouseBlock->setWarehouseTitle($order->getWarehouseTitle());
-        $warehouseBlock->setTemplate('Novapay_Delivery::order_info_shipping_info.phtml');
-        $html = $observer->getTransport()->getOutput() . $warehouseBlock->toHtml();
-        $observer->getTransport()->setOutput($html);
-
+        // there is no frontend layout implementation due to the project scope
         return $this;
     }
 }

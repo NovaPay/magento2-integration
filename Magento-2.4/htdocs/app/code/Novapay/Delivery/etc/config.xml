@@ -5,8 +5,8 @@
             <novapay>
                 <active>0</active>
                 <title>Novapay Delivery</title>
-                <name>Novapay Delivery method</name>
-                <shipping_cost>43</shipping_cost>
+                <name>Flexible</name>
+                <shipping_cost>40</shipping_cost>
                 <sallowspecific>0</sallowspecific>
                 <sort_order>15</sort_order>
                 <model>Novapay\Delivery\Model\Carrier\Novapay</model>

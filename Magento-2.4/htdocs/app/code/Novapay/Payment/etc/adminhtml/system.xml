@@ -64,7 +64,7 @@
                     <field id="payment_type" translate="label" type="select" sortOrder="22" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Payment type</label>
                         <comment>
-                            On when payment type is Hold safe delivery is available.
+                            <![CDATA[When Novapay Delivery is used payment type is Secure Delivery Hold and cannot be selected here.]]>
                         </comment>
                         <source_model>Novapay\Payment\Model\Adminhtml\Source\PaymentType</source_model>
                         <validate>required-entry</validate>
@@ -74,6 +74,9 @@
 
                     <field id="is_live" translate="label" type="select" sortOrder="23" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Live mode</label>
+                        <comment>
+                            <![CDATA[YES = production mode, NO = test mode.]]>
+                        </comment>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/is_live</config_path>
@@ -81,6 +84,9 @@
 
                     <field id="debug" translate="label" type="select" sortOrder="24" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Debug requests</label>
+                        <comment>
+                            <![CDATA[Used to debug API information during development.]]>
+                        </comment>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                         <config_path>payment/novapayment_gateway/debug</config_path>
                     </field>
@@ -98,6 +104,9 @@
                     <label>Redirects after payment</label>
                     <field id="success_url" translate="label" type="text" sortOrder="21" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Success Url</label>
+                        <comment>
+                            <![CDATA[Url of the page where user should be redirected after successfull payment.]]>
+                        </comment>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/success_url</config_path>
                         <can_be_empty>0</can_be_empty>
@@ -105,6 +114,9 @@
 
                     <field id="fail_url" translate="label" type="text" sortOrder="22" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Fail Url</label>
+                        <comment>
+                            <![CDATA[Url of the page where user should be redirected after failed payment.]]>
+                        </comment>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/fail_url</config_path>
                         <can_be_empty>0</can_be_empty>
@@ -146,60 +158,90 @@
                     -->
                     <field id="payment_action_created" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Payment Action Created</label>
+                        <comment>
+                            <![CDATA[When payment has been created {created}.]]>
+                        </comment>
                         <source_model>Novapay\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/status_created</config_path>
                     </field>
                     <field id="payment_action_expired" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Payment Action Expired</label>
+                        <comment>
+                            <![CDATA[When session has been expired {expired}.]]>
+                        </comment>
                         <source_model>Novapay\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/status_expired</config_path>
                     </field>
                     <field id="payment_action_processing" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Payment Action Processing</label>
+                        <comment>
+                            <![CDATA[When payment is processing {processing}.]]>
+                        </comment>
                         <source_model>Novapay\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/status_processing</config_path>
                     </field>
                     <field id="payment_action_holded" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Payment Action Holded</label>
+                        <comment>
+                            <![CDATA[When payment is being held {holded}.]]>
+                        </comment>
                         <source_model>Novapay\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/status_holded</config_path>
                     </field>
                     <field id="payment_action_hold_confirmed" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Payment Action Hold confirmed</label>
+                        <comment>
+                            <![CDATA[When payment hold has been confirmed {hold_confirmed}.]]>
+                        </comment>
                         <source_model>Novapay\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/status_hold_confirmed</config_path>
                     </field>
                     <field id="payment_action_processing_hold_completion" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Payment Action Hold completion</label>
+                        <comment>
+                            <![CDATA[When payment hold is completing {processing_hold_completion}.]]>
+                        </comment>
                         <source_model>Novapay\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/status_processing_hold_completion</config_path>
                     </field>
                     <field id="payment_action_paid" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Payment Action Paid</label>
+                        <comment>
+                            <![CDATA[When payment has been paid {paid}.]]>
+                        </comment>
                         <source_model>Novapay\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/status_paid</config_path>
                     </field>
                     <field id="payment_action_failed" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Payment Action Failed</label>
+                        <comment>
+                            <![CDATA[When payment has failed {failed}.]]>
+                        </comment>
                         <source_model>Novapay\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/status_failed</config_path>
                     </field>
                     <field id="payment_action_processing_void" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Payment Action Processing void</label>
+                        <comment>
+                            <![CDATA[When payment is canceling {processing_void}.]]>
+                        </comment>
                         <source_model>Novapay\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/status_processing_void</config_path>
                     </field>
                     <field id="payment_action_voided" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Payment Action Voided</label>
+                        <comment>
+                            <![CDATA[When payment has been canceled {voided}.]]>
+                        </comment>
                         <source_model>Novapay\Payment\Model\Adminhtml\Source\PaymentAction</source_model>
                         <validate>required-entry</validate>
                         <config_path>payment/novapayment_gateway/status_voided</config_path>

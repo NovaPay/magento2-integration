@@ -86,3 +86,19 @@ No,No
 "Delivery confirmation created","Delivery confirmation created"
 Live mode,Live mode
 Debug requests,Debug requests
+
+"When Novapay Delivery is used payment type is Secure Delivery Hold and cannot be selected here.","When Novapay Delivery is used payment type is Secure Delivery Hold and cannot be selected here."
+"YES = production mode, NO = test mode.","YES = production mode, NO = test mode."
+"Used to debug API information during development.","Used to debug API information during development."
+"Url of the page where user should be redirected after successfull payment.","Url of the page where user should be redirected after successfull payment."
+"Url of the page where user should be redirected after failed payment.","Url of the page where user should be redirected after failed payment."
+"When payment has been created {created}.","When payment has been created {created}."
+"When session has been expired {expired}.","When session has been expired {expired}."
+"When payment is processing {processing}.","When payment is processing {processing}."
+"When payment is being held {holded}.","When payment is being held {holded}."
+"When payment hold has been confirmed {hold_confirmed}.","When payment hold has been confirmed {hold_confirmed}."
+"When payment hold is completing {processing_hold_completion}.","When payment hold is completing {processing_hold_completion}."
+"When payment has been paid {paid}.","When payment has been paid {paid}."
+"When payment has failed {failed}.","When payment has failed {failed}."
+"When payment is canceling {processing_void}.","When payment is canceling {processing_void}."
+"When payment has been canceled {voided}.","When payment has been canceled {voided}."
