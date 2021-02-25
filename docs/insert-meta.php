@@ -1,5 +1,11 @@
 <?php
 
+// Source code of the Documentation are stored in .md files: INSTALL.<language>.md
+// To convert .md files into .html follow next steps:
+// 1. Open .md file with MacDown appliction and export it to .html > File > Export > HTML
+// 2. run php script insert-meta.php > php docs/insert-meta.php
+// 3. Use .html files as documentation with attached images/*
+
 require_once __DIR__ . '/vendor/autoload.php';
 
 $search = "<meta charset=\"utf-8\">
@@ -26,11 +32,6 @@ foreach ($languages as $language => $title) {
 
     printf("%s\n  > %s\n", $fileMD, $fileHTML);
 
-    // $text = file_get_contents($fileMD);
-    // $md = new Parsedown();
-    // $html = $md->text($text);
-    // file_put_contents($fileHTML, $html);
-    
     $content  = file_get_contents($fileHTML);
     $updated  = sprintf($replace, $host, $language);
     $content  = str_replace($search, $updated, $content);

@@ -350,6 +350,84 @@ kbd {
 
 <h2 id="toc_2">Налаштування в панелі адміністрування</h2>
 
+<h3 id="toc_3">Налаштування системи доставки</h3>
+
+<blockquote>
+<p>Розширення Novapay Доставка залежить від Novapay Оплата та не працює без нього.</p>
+</blockquote>
+
+<ol>
+<li>Перейдіть до розширення.
+
+<ul>
+<li>Натисніть на <code>Stores</code> в боковій навігації<br>
+<img src="images/en/02-Admin-Menu-Stores.png" alt="Stores"></li>
+<li>Натисніть на <code>Configuration</code> у відкритому підменю<br>
+<img src="images/en/03-Admin-Menu-Stores-Configuration.png" alt="Stores"></li>
+<li>Перейдіть в <code>Sales</code><br>
+<img src="images/en/04-Admin-Menu-Sales.png" alt="Sales"></li>
+<li>Перейдіть в <code>Delivery methods</code><br>
+<img src="images/en/41-Admin-Menu-Delivery-methods.png" alt="Delivery methods"></li>
+<li>Пролистайте до розширення Novapay Доставка.<br>
+<img src="images/en/42-Admin-Novapay-Delivery-settings.png" alt="Novapay extension"></li>
+</ul></li>
+<li>Налаштуйте розширення
+
+<ul>
+<li>Увімкніть розширення Novapay Доставка.<br>
+<img src="images/en/43-Admin-Novapay-Delivery-enabled.png" alt="Enable">
+Коли розширення увімкнуте інші опції доступні<br>
+<img src="images/en/44-Admin-Novapay-Delivery-options.png" alt="Options"></li>
+<li>Опції:
+
+<ul>
+<li><code>Title</code> - заголовок метода доставки</li>
+<li><code>Method Name</code> — назва метода. При оформлені замовлення змінюється на <code>місто &gt; відділення</code> коли відділення обране та сума доставки розрахована</li>
+<li><code>Shipping Cost</code> — вартість доставки за замовченням, до того як обрано відділення. Встановіть мінімальне значення або середнє.</li>
+<li><code>Length unit</code> - одиниця виміру габаритів.
+
+<ul>
+<li><code>Width</code> - додатковий атрибут, відповідаючий довжині продукта</li>
+<li><code>Height</code> - додатковий атрибут, відповідаючий ширині продукта</li>
+<li><code>Depth</code> - додатковий атрибут, відповідаючий глибині продукта</li>
+</ul></li>
+<li><code>Weight unit</code> - одиниця виміру маси продукта, використовується тільки для додаткового атрибута. Використовуйте системне значення щоб рахувати стандартний атрибут ваги продукта.
+
+<ul>
+<li><code>Weight</code> - додатковий атрибут, відповідаючий масі продукта. Коли вибрано системне значення даний атрибут не використовується.</li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>Коли метод налаштован та з&#39;явились замовлення з цим методом, можна побачити трекінговий номер посилки, роздрукувати транспортну накладну та відстежувати посилку.
+
+<ul>
+<li>Перейдіть в Sales &gt; Orders
+<img src="images/en/45-Admin-Novapay-Orders.png" alt="Orders"></li>
+<li>Відкрийте замовлення з доставкою Novapay для перегляду
+<img src="images/en/46-Admin-Orders-list.png" alt="Order list"></li>
+<li>Перевірте інформацію про доставку нижче секції Payment and Shipment method
+<img src="images/en/47-Admin-Order-Delivery-info.png" alt="Delivery information"></li>
+<li>Для доставки замовлення треба натиснути кнопку <code>Подтвердить доставку</code>
+<img src="images/en/48-Admin-Order-Confirm-Delivery.png" alt="Confirm delivery"></li>
+<li>Після того як доставка підтверджена можна перейти у розділ <code>Shipments</code> в боковій навігації замовлення
+<img src="images/en/49-Admin-Order-Shipments.png" alt="Shipments"></li>
+<li>В цій секції є всі доставки по данному замовленню.
+<img src="images/en/50-Admin-Shipments.png" alt="Shipments list"></li>
+<li>Коли доставка відкрита можна побачити всю необхідну інформацію.
+<img src="images/en/51-Admin-Shipment-Information.png" alt="Shipment information"></li>
+<li>Пролистайте вниз до трекінгової інформації так кнопки друку.
+<img src="images/en/52-Admin-Shipping-Tracking.png" alt="Tracking information">.</li>
+<li>Натисніть <code>Print Shipping Label</code> щоб роздрукувати транспортну накладну.
+<img src="images/en/53-Admin-Shipping-Print.png" alt="Delivery document"></li>
+<li>Натисніть на посилання <code>20400215655683</code>, спливаюче вікно має відкритись, якщо браузер блокує спливаючі вікна - дозвольте це для цього сайту.
+<img src="images/en/54-Tracking-information.png" alt="Tracking information"></li>
+<li>Натисніть на посилання для відстеження посилки.
+<img src="images/en/55-Follow-My-Package.png" alt="Follow my package"></li>
+</ul></li>
+</ol>
+
+<h3 id="toc_4">Налаштування платіжної системи</h3>
+
 <ol>
 <li>Увійдіть в панель адміністратора на своєму інтернет магазині, зазвичай URL-адреса <code>https://your-webshop-domain.com/admin/</code>, але вона може бути змінений в конфігурації.<br>
 <img src="images/en/01-Admin-Login.png" alt="Admin Log in"><br></li>
@@ -416,7 +494,28 @@ kbd {
 </ul></li>
 </ol>
 
-<h2 id="toc_3">Тестування на стороні інтернет магазину</h2>
+<h2 id="toc_5">Тестування на стороні інтернет магазину</h2>
+
+<h3 id="toc_6">Модуль доставки</h3>
+
+<ol>
+<li><p>Перейдіть в магазин та додайте декілька товарів у кошик. Перейдіть на сторінку оформлення замовлення та виберіть метод доставки <code>Novapay Delivery</code> в <code>Shipping Methods</code>.<br>
+<img src="images/en/56-Select-Novapay-Delivery.png" alt="Select Novapay Delivery"></p>
+
+<blockquote>
+<p>Якщо така доставка <code>Novapay Delivery</code> відсутня в списку, якись з критерієв не виконується:
+1. <code>Novapay Delivery</code> метод не встановлен або не активован
+1. Обрана країна не Україна. Метод <code>Novapay Delivery</code> працює тільки в Україні.
+1. Деякі продукти в кошику не мають габаритів або маси встановлені в магазині. Всі продукти мають мати встановлені габарити та вагу, і всі відносини до цих атрібутів мають буту налаштовані Admin &gt; Sales &gt; Delivery methods &gt; Novapay.</p>
+</blockquote></li>
+<li><p>Введіть місто одержувача і виберіть його зі списку.</p></li>
+<li><p>Введіть номер відділення та виберіть його зі списку.
+<img src="images/en/57-Select-Warehouse.png" alt="Select Warehouse"></p></li>
+<li><p>Перевірте змінилася сума доставки.</p></li>
+<li><p>Переходьте до наступного кроку оформлення замовлення.</p></li>
+</ol>
+
+<h3 id="toc_7">Платіжний модуль</h3>
 
 <ol>
 <li>Зайдіть в свій магазин і додайте товар в корзину. Перейдіть на сторінку оформлення замовлення, виконайте крок <code>Shipping</code> та перейдіть до <code>Review &amp; Payments</code>.<br>

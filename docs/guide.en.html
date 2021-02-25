@@ -353,6 +353,87 @@ kbd {
 <ol>
 <li>Log in to Admin panel on your website, usually url is <code>https://your-webshop-domain.com/admin/</code>, but it might be changed in the configuration.<br>
 <img src="images/en/01-Admin-Login.png" alt="Admin Log in"></li>
+</ol>
+
+<h3 id="toc_3">Novapay Delivery extension</h3>
+
+<blockquote>
+<p>Novapay Delivery extension is dependent on Novapay Payment extension and does not work without it.</p>
+</blockquote>
+
+<ol>
+<li>Go to Extensions.
+
+<ul>
+<li>Click on <code>Stores</code> in sidebar navigation<br>
+<img src="images/en/02-Admin-Menu-Stores.png" alt="Stores"></li>
+<li>Click on <code>Configuration</code> in opened subnavigation<br>
+<img src="images/en/03-Admin-Menu-Stores-Configuration.png" alt="Stores"></li>
+<li>Navigate to <code>Sales</code><br>
+<img src="images/en/04-Admin-Menu-Sales.png" alt="Sales"></li>
+<li>Navigate to <code>Delivery methods</code><br>
+<img src="images/en/41-Admin-Menu-Delivery-methods.png" alt="Delivery methods"></li>
+<li>Scroll down to Novapay delivery extension.<br>
+<img src="images/en/42-Admin-Novapay-Delivery-settings.png" alt="Novapay extension"></li>
+</ul></li>
+<li>Configure extension
+
+<ul>
+<li>Enable Novapay Delivery extension.<br>
+<img src="images/en/43-Admin-Novapay-Delivery-enabled.png" alt="Enable">
+When it&#39;s enabled you can see other options of the configuration<br>
+<img src="images/en/44-Admin-Novapay-Delivery-options.png" alt="Options"></li>
+<li>Options:
+
+<ul>
+<li><code>Title</code> - delivery method title</li>
+<li><code>Method Name</code> — name of the method. In the checkout when warehouse is selected method name is changed to <code>city &gt; warehouse</code></li>
+<li><code>Shipping Cost</code> — default shipping cost before system can calculate it (warehouse is not selected). Set minimum or average.</li>
+<li><code>Length unit</code> - product dimensions unit.
+
+<ul>
+<li><code>Width</code> - custom attribute correlated with product package width</li>
+<li><code>Height</code> - custom attribute correlated with product package height</li>
+<li><code>Depth</code> - custom attribute correlated with product package width</li>
+</ul></li>
+<li><code>Weight unit</code> - product weight unit, works only for a custom attribute. Use system value to calculate a standard weight attribute of the product.
+
+<ul>
+<li><code>Weight</code> - custom attribute correlated with product package weight. When system value is selected this value is not used.</li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>After delivery method setup you can follow orders with selected delivery methods to check tracking number, print it and track the package delivery.
+
+<ul>
+<li>Go to Sales &gt; Orders
+<img src="images/en/45-Admin-Novapay-Orders.png" alt="Orders"></li>
+<li>View (click) one order with the Novapay delivery
+<img src="images/en/46-Admin-Orders-list.png" alt="Order list"></li>
+<li>Check the delivery information in the order below Payment and Shipment method section
+<img src="images/en/47-Admin-Order-Delivery-info.png" alt="Delivery information"></li>
+<li>To proceed with the delivery click link button &quot;Confirm delivery&quot;
+<img src="images/en/48-Admin-Order-Confirm-Delivery.png" alt="Confirm delivery"></li>
+<li>After delivery is confirmed click left sidebar navigation &quot;Shipments&quot;
+<img src="images/en/49-Admin-Order-Shipments.png" alt="Shipments"></li>
+<li>In this section you can see all the shipments for current order. 
+<img src="images/en/50-Admin-Shipments.png" alt="Shipments list"></li>
+<li>When shipment is opened you can see important information.
+<img src="images/en/51-Admin-Shipment-Information.png" alt="Shipment information"></li>
+<li>Scroll down to access tracking and printing functionality.
+<img src="images/en/52-Admin-Shipping-Tracking.png" alt="Tracking information">.</li>
+<li>Click &quot;Print Shipping Label&quot; to print Novaposhta delivery document
+<img src="images/en/53-Admin-Shipping-Print.png" alt="Delivery document"></li>
+<li>Click on the delivery number &quot;20400215655683&quot;, popup dialog might be created
+<img src="images/en/54-Tracking-information.png" alt="Tracking information"></li>
+<li>Click on the link to follow your package in th delivery process
+<img src="images/en/55-Follow-My-Package.png" alt="Follow my package"></li>
+</ul></li>
+</ol>
+
+<h3 id="toc_4">Novapay Payment extension</h3>
+
+<ol>
 <li>Go to Extensions.
 
 <ul>
@@ -416,7 +497,28 @@ When it&#39;s enabled you can see subitems (tabs) of the configuration<br>
 </ul></li>
 </ol>
 
-<h2 id="toc_3">Front store test</h2>
+<h2 id="toc_5">Front store test</h2>
+
+<h3 id="toc_6">Novapay Delivery extension</h3>
+
+<ol>
+<li><p>Go to your front store and add some product in the shopping cart. Go to the checkout page and select <code>Novapay Delivery</code> in the <code>Shipping Methods</code>.<br>
+<img src="images/en/56-Select-Novapay-Delivery.png" alt="Select Novapay Delivery"></p>
+
+<blockquote>
+<p>If there is no <code>Novapay Delivery</code> some criteria do not meet:
+1. <code>Novapay Delivery</code> method is not installed or enabled
+1. Selected country is not Ukraine. <code>Novapay Delivery</code> works only in Ukraine.
+1. Some products in your shopping cart have no dimensions or weight defined. All products must have all dimensions (width, height, weight) defined and set up in the Admin &gt; Sales &gt; Delivery methods &gt; Novapay configuration</p>
+</blockquote></li>
+<li><p>Enter warehouse city and select it from autocomplete dropdown.</p></li>
+<li><p>Enter number of the warehouse and select it from autocomplete dropdown.
+<img src="images/en/57-Select-Warehouse.png" alt="Select Warehouse"></p></li>
+<li><p>Check the calculated shipping cost.</p></li>
+<li><p>Continue to the next step.</p></li>
+</ol>
+
+<h3 id="toc_7">Novapay Payment extension</h3>
 
 <ol>
 <li>Go to your front store and add some product in the shopping cart. Go to the checkout page and complete <code>Shipping</code> step and go to <code>Review &amp; Payments</code>.<br>

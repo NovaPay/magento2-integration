@@ -340,7 +340,7 @@ kbd {
 <li>Загрузите файлы (пример с <a href="https://filezilla-project.org/">FTP-клиентом Filezilla</a>) на ваш хостинг (сервер / облако):
 
 <ul>
-<li>Подключаитесь к вашему хостингу через FTP или SFTP
+<li>Подключайтесь к вашему хостингу через FTP или SFTP
 <img src="images/en/21-FTP-Upload.png" alt="Upload files with FTP"></li>
 <li>Проверьте расположение модуля на сервере относительно корневого каталога вашего интернет магазина <code>htdocs/app/code/Novapay/</code><br>
 <img src="images/en/22-FTP-Done.png" alt="Check files on FTP"></li>
@@ -350,9 +350,87 @@ kbd {
 
 <h2 id="toc_2">Настройка в панели администрирования</h2>
 
+<h3 id="toc_3">Настройка системы доставки</h3>
+
+<blockquote>
+<p>Расширение Novapay Доставка зависит от расширения Novapay Оплата и не работает без него.</p>
+</blockquote>
+
+<ol>
+<li>Перейдите в расширения.
+
+<ul>
+<li>Нажмите на <code>Stores</code> в боковой навигации<br>
+<img src="images/en/02-Admin-Menu-Stores.png" alt="Stores"></li>
+<li>Нажмите на <code>Configuration</code> в открытом подменю<br>
+<img src="images/en/03-Admin-Menu-Stores-Configuration.png" alt="Stores"></li>
+<li>Перейдите в <code>Sales</code><br>
+<img src="images/en/04-Admin-Menu-Sales.png" alt="Sales"></li>
+<li>Перейдите в <code>Delivery methods</code><br>
+<img src="images/en/41-Admin-Menu-Delivery-methods.png" alt="Delivery methods"></li>
+<li>Пролистайте до расширения Novapay Доставка.<br>
+<img src="images/en/42-Admin-Novapay-Delivery-settings.png" alt="Novapay extension"></li>
+</ul></li>
+<li>Настройте расширение
+
+<ul>
+<li>Включите расширение Novapay Доставка.<br>
+<img src="images/en/43-Admin-Novapay-Delivery-enabled.png" alt="Enable">
+Когда расширение включено другие опции доступны<br>
+<img src="images/en/44-Admin-Novapay-Delivery-options.png" alt="Options"></li>
+<li>Опции:
+
+<ul>
+<li><code>Title</code> - заголовок метода доставки</li>
+<li><code>Method Name</code> — название метода. При оформлении заказа изменяется на <code>город &gt; отделение</code> когда выбрано отделение и сумма доставки просчитана</li>
+<li><code>Shipping Cost</code> — стоимость доставки по умолчанию, до того как выбрано отделение. Установите минимальное значение либо среднее.</li>
+<li><code>Length unit</code> - единица измерения габаритов.
+
+<ul>
+<li><code>Width</code> - дополнительный атрибут, соответствующий длине продукта</li>
+<li><code>Height</code> - дополнительный атрибут, соответствующий ширине продукта</li>
+<li><code>Depth</code> - дополнительный атрибут, соответствующий глубине продукта</li>
+</ul></li>
+<li><code>Weight unit</code> - единица измерения массы продукта, используется только для дополнительного атрибута. Используйте системное значение чтобы учитывать стандартный атрибут веса продукта.
+
+<ul>
+<li><code>Weight</code> - дополнительный атрибут, соответствующий массе продукта. Когда выбрано использовать системное значение данный атрибут не используется.</li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>После того как метод доставки настроен и появились заказы с выбранной доставкой в заказах можно видеть трекинговый номер посылки, печатать транспортную накладную и отслеживать посылку.
+
+<ul>
+<li>Перейдите в Sales &gt; Orders
+<img src="images/en/45-Admin-Novapay-Orders.png" alt="Orders"></li>
+<li>Откройте заказ с доставкой Novapay для просмотра
+<img src="images/en/46-Admin-Orders-list.png" alt="Order list"></li>
+<li>Проверьте информацию о доставке ниже секции Payment and Shipment method
+<img src="images/en/47-Admin-Order-Delivery-info.png" alt="Delivery information"></li>
+<li>Для доставки заказа необходимо нажать на кнопку <code>Подтвердить доставку</code>
+<img src="images/en/48-Admin-Order-Confirm-Delivery.png" alt="Confirm delivery"></li>
+<li>После того как доставка подтверждена можно перейти в раздел <code>Shipments</code> в боковой навигации заказа
+<img src="images/en/49-Admin-Order-Shipments.png" alt="Shipments"></li>
+<li>В этой секции видны все доставки по данному заказу.
+<img src="images/en/50-Admin-Shipments.png" alt="Shipments list"></li>
+<li>Когда доставка открыта можно увидеть всю необходимую информацию.
+<img src="images/en/51-Admin-Shipment-Information.png" alt="Shipment information"></li>
+<li>Пролистайте вниз до трекинговой информации и кнопки печати.
+<img src="images/en/52-Admin-Shipping-Tracking.png" alt="Tracking information">.</li>
+<li>Нажмите <code>Print Shipping Label</code> чтобы распечатать транспортную накладную
+<img src="images/en/53-Admin-Shipping-Print.png" alt="Delivery document"></li>
+<li>Нажмите на ссылку <code>20400215655683</code>, всплывающее окно должно открыться, если броузер блокирует открытие всплыващих окон - разрешите для этого сайта
+<img src="images/en/54-Tracking-information.png" alt="Tracking information"></li>
+<li>Нажмите на ссылку для отслеживания посылки
+<img src="images/en/55-Follow-My-Package.png" alt="Follow my package"></li>
+</ul></li>
+</ol>
+
+<h3 id="toc_4">Настройка системы оплаты</h3>
+
 <ol>
 <li>Войдите в панель администратора на своем интернет магазине, обычно URL-адрес <code>https://your-webshop-domain.com/admin/</code>, но он может быть изменен в конфигурации.<br>
-<img src="images/en/01-Admin-Login.png" alt="Admin Log in"><br></li>
+<img src="images/en/01-Admin-Login.png" alt="Административный логин"><br></li>
 <li>Перейдите в Расширения.
 
 <ul>
@@ -416,7 +494,28 @@ kbd {
 </ul></li>
 </ol>
 
-<h2 id="toc_3">Тестирование на стороне интернет магазина</h2>
+<h2 id="toc_5">Тестирование на стороне интернет магазина</h2>
+
+<h3 id="toc_6">Модуль доставки</h3>
+
+<ol>
+<li><p>Перейдите в магазин и добавьте несколько товаров в корзину. Перейдите на страницу оформления заказа и выберите метод доставки <code>Novapay Delivery</code> в <code>Shipping Methods</code>.<br>
+<img src="images/en/56-Select-Novapay-Delivery.png" alt="Select Novapay Delivery"></p>
+
+<blockquote>
+<p>Если такой доставки <code>Novapay Delivery</code> нет в списке, какой-то из нижеперечисленных критериев не выполнен:
+1. <code>Novapay Delivery</code> метод не установлен или не включен
+1. Выбранная страна не Украина. Метод <code>Novapay Delivery</code> работает только в Украине.
+1. Некоторые продукты в корзине не имеют габаритов или массы определённой в магазине. Все продукты должны иметь определённые габариты и настроеные соответствия атрибутов Admin &gt; Sales &gt; Delivery methods &gt; Novapay конфигурация.</p>
+</blockquote></li>
+<li><p>Введите город получателя и выберите его из выпадающего списка.</p></li>
+<li><p>Введите номер отделения и выберите его из выпадающего списка.
+<img src="images/en/57-Select-Warehouse.png" alt="Select Warehouse"></p></li>
+<li><p>Проверьте поменялась ли сумма доставки.</p></li>
+<li><p>Переходите к следующему шагу оформления заказа.</p></li>
+</ol>
+
+<h3 id="toc_7">Модуль оплаты</h3>
 
 <ol>
 <li>Зайдите в свой магазин и добавьте товар в корзину. Перейдите на страницу оформления заказа, выполните шаг <code>Shipping</code> и перейдите к <code>Review &amp; Payments</code>.<br>
