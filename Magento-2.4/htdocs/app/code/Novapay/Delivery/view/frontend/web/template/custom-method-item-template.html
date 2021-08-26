@@ -27,7 +27,7 @@
 </tr>
 <!-- novapay search city & warehouse -->
 <tr data-bind="if: method.carrier_code == 'novapay' && element.source.shippingAddress.country_id == 'UA'">
-    <td class="col fieldset" colspan="4">
+    <td class="col fieldset search-column" colspan="4" data-bind="css: {'_selected': element.isSelected() == (method.carrier_code + '_' + method.method_code)}">
         <form 
             class="fields" 
             data-role="city-search-form"

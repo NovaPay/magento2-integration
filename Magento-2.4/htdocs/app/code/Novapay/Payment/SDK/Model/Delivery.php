@@ -14,6 +14,7 @@
 
 namespace Novapay\Payment\SDK\Model;
 
+use Novapay\Delivery\Gateway\ShippingDelivery;
 use Novapay\Payment\SDK\Schema\Delivery as DeliverySchema;
 use Novapay\Payment\SDK\Schema\Response\Response;
 use Novapay\Payment\SDK\Schema\Request\DeliveryConfirmPostRequest;
@@ -105,6 +106,24 @@ class Delivery extends Model
         $this->price = $res->delivery_price;
 
         return true;
+    }
+
+    /**
+     * Calculates the price for the object shipping delivery which holds 
+     *
+     * @param ShippingDelivery $shippingDelivery All shipping information.
+     * 
+     * @return bool TRUE on success, FALSE on failure.
+     */
+    public function priceOfShipping(ShippingDelivery $shippingDelivery)
+    {
+        return $this->price(
+            $shippingDelivery->total,
+            $shippingDelivery->delivery->volume_weight,
+            $shippingDelivery->delivery->weight,
+            $shippingDelivery->delivery->recipient_city,
+            $shippingDelivery->delivery->recipient_warehouse
+        );
     }
 
     /**

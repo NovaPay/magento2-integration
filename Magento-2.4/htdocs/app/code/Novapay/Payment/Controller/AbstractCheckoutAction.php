@@ -170,13 +170,13 @@ abstract class AbstractCheckoutAction extends AbstractAction
     protected function logPostback($request, $response)
     {
         $file = $_SERVER['DOCUMENT_ROOT'] . '/var/log/novapay-postback.log';
-        $fp = fopen($file, 'a+');
+        $fp = @fopen($file, 'a+');
         if (!$fp) {
             return false;
         }
         fputs(
             $fp, 
-            sprintf("%s\n\n%s\n", $request, $response)
+            sprintf("%s\n%s\n\n%s\n\n", date('c'), $request, $response)
         );
         fclose($fp);
         return true;
