@@ -303,7 +303,7 @@ class Novapay extends AbstractCarrier implements CarrierInterface, ShipmentEstim
         $this->config->initModel();
 
         $delivery = new Delivery();
-        $ok = $delivery->priceOfShipping($info->total, $info->delivery);
+        $ok = $delivery->priceOfShipping($info);
         if (!$ok) {
             $response = $delivery->getResponse();
             if ($response instanceof Error) {
