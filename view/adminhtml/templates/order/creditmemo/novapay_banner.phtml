@@ -1,0 +1,28 @@
+<?php
+/**
+ * Copyright © 2026 NovaPay. All rights reserved.
+ * Licensed under the MIT License. See LICENSE for details.
+ */
+
+/**
+ * @var \NovaPay\Payment\Block\Adminhtml\Order\Creditmemo\Banner $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+if (!$block->shouldShow()) {
+    return;
+}
+?>
+<div class="message message-notice notice novapay-partial-refund-banner">
+    <div>
+        <?= $escaper->escapeHtml(
+            __('Online refunds (full or partial) through NovaPay are available only for orders paid with NovaPay.')
+        ) ?>
+        <?= $escaper->escapeHtml(
+            __(
+                'An offline refund does not return funds at NovaPay — use the online Refund button '
+                . 'on the invoice.'
+            )
+        ) ?>
+    </div>
+</div>

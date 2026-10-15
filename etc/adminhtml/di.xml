@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<!--
+  Copyright © 2026 NovaPay. All rights reserved.
+  Licensed under the MIT License. See LICENSE for details.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!--
+      Optional NovaPay refund button (payment/novapay/refund_flow). Every plugin is a no-op unless the
+      option is on for the order's store and the order was paid with NovaPay.
+    -->
+    <type name="Magento\Sales\Block\Adminhtml\Order\View">
+        <plugin name="novapay_refund_button" type="NovaPay\Payment\Plugin\Adminhtml\Order\ViewButtonsPlugin"/>
+    </type>
+    <type name="Magento\Sales\Block\Adminhtml\Order\Invoice\View">
+        <plugin name="novapay_hide_invoice_creditmemo_button"
+                type="NovaPay\Payment\Plugin\Adminhtml\Order\InvoiceViewButtonsPlugin"/>
+    </type>
+    <type name="Magento\Sales\Block\Adminhtml\Order\Creditmemo\Create\Items">
+        <plugin name="novapay_hide_refund_offline_button"
+                type="NovaPay\Payment\Plugin\Adminhtml\Order\CreditmemoItemsButtonsPlugin"/>
+    </type>
+
+    <type name="NovaPay\Payment\Controller\Adminhtml\Order\RefundPost">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Controller\Adminhtml\Order\CancelHold">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+
+    <!--
+      Optional "Confirm NovaPay Hold" button (payment/novapay/hold_confirm_flow). A no-op unless the
+      option is on for the order's store and the order was paid with NovaPay.
+    -->
+    <type name="Magento\Sales\Block\Adminhtml\Order\View">
+        <plugin name="novapay_hold_confirm_button"
+                type="NovaPay\Payment\Plugin\Adminhtml\Order\HoldConfirmButtonsPlugin"/>
+    </type>
+    <type name="NovaPay\Payment\Controller\Adminhtml\Order\ConfirmHoldPost">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <!--
+      Failed NovaPay capture/void/refund calls from the native admin actions are written to the order
+      history after the action's transaction was rolled back (Model/Order/GatewayFailureHistoryWriter).
+    -->
+    <type name="Magento\Sales\Controller\Adminhtml\Order\Creditmemo\Save">
+        <plugin name="novapay_gateway_failure_history"
+                type="NovaPay\Payment\Plugin\Adminhtml\Order\GatewayFailureHistoryPlugin"/>
+    </type>
+    <type name="Magento\Sales\Controller\Adminhtml\Order\Invoice\Save">
+        <plugin name="novapay_gateway_failure_history"
+                type="NovaPay\Payment\Plugin\Adminhtml\Order\GatewayFailureHistoryPlugin"/>
+    </type>
+    <type name="Magento\Sales\Controller\Adminhtml\Order\VoidPayment">
+        <plugin name="novapay_gateway_failure_history"
+                type="NovaPay\Payment\Plugin\Adminhtml\Order\GatewayFailureHistoryPlugin"/>
+    </type>
+    <type name="Magento\Sales\Controller\Adminhtml\Order\Cancel">
+        <plugin name="novapay_gateway_failure_history"
+                type="NovaPay\Payment\Plugin\Adminhtml\Order\GatewayFailureHistoryPlugin"/>
+    </type>
+    <type name="NovaPay\Payment\Model\Order\GatewayFailureHistoryWriter">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+</config>

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+  Copyright © 2026 NovaPay. All rights reserved.
+  Licensed under the MIT License. See LICENSE for details.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!--
+          Partial-refund banner on the credit memo page. `submit_before` is a core,
+          non-method-specific container inside the items block; the banner template is a no-op
+          unless the order was actually paid with NovaPay. This single handle covers both ways to
+          reach the "New Credit Memo" page (order-view and invoice-view buttons), since both are
+          served by the same controller action.
+        -->
+        <referenceContainer name="submit_before">
+            <block class="NovaPay\Payment\Block\Adminhtml\Order\Creditmemo\Banner"
+                   name="novapay_creditmemo_banner"
+                   template="NovaPay_Payment::order/creditmemo/novapay_banner.phtml"/>
+        </referenceContainer>
+    </body>
+</page>

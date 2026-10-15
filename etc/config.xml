@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<!--
+  Copyright © 2026 NovaPay. All rights reserved.
+  Licensed under the MIT License. See LICENSE for details.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <payment>
+            <novapay>
+                <!-- Virtual payment adapter type, declared in etc/di.xml -->
+                <model>NovaPay\Payment\Model\Adapter</model>
+                <active>0</active>
+                <title>NovaPay</title>
+                <test_mode>1</test_mode>
+                <!-- No dedicated QA credentials are bundled with the module; leave these blank — do not pre-fill test values here. -->
+                <merchant_id></merchant_id>
+                <private_key></private_key>
+                <public_key></public_key>
+                <!-- direct = authorize_capture (one-step), hold = authorize (two-step) -->
+                <payment_action>authorize_capture</payment_action>
+                <!--
+                  Redirect gateway: nothing can be authorized/captured yet at order-placement time.
+                  "initialize" is Magento's hook for this case (Order\Payment::place() calls it
+                  instead of authorize/capture when can_initialize=1); Gateway\Command\
+                  InitializeCommand sets the order to state new / status novapay_pending.
+                  order_status below is only the defensive fallback place() uses if the command's
+                  stateObject ever comes back without a status.
+                -->
+                <can_initialize>1</can_initialize>
+                <order_status>novapay_pending</order_status>
+                <postback_version>v3</postback_version>
+                <success_url></success_url>
+                <fail_url></fail_url>
+                <success_redirect_timeout>5</success_redirect_timeout>
+                <recipient_identifier></recipient_identifier>
+                <debug>0</debug>
+                <phone_normalize_enabled>1</phone_normalize_enabled>
+                <phone_validation_enabled>1</phone_validation_enabled>
+                <!-- Optional NovaPay refund button in the admin order view; off keeps the native Credit Memo UI -->
+                <refund_flow>0</refund_flow>
+                <!-- Optional "Confirm NovaPay Hold" button in the admin order view; off keeps the native Invoice button -->
+                <hold_confirm_flow>0</hold_confirm_flow>
+                <phone_validation_error_message>Please enter a valid Ukrainian phone number in +380XXXXXXXXX format.</phone_validation_error_message>
+                <sort_order>0</sort_order>
+                <!--
+                  "can_authorize" is deliberately NOT set: this method never reaches Magento's
+                  native "authorize" pool slot — the redirect flow always goes through
+                  "initialize" (see above), and there is no AuthorizeCommand registered in the
+                  CommandPool. Hold-mode authorization happens entirely inside "initialize"
+                  (Gateway\Command\InitializeCommand), gated by can_initialize.
+                -->
+                <is_gateway>1</is_gateway>
+                <can_capture>1</can_capture>
+                <can_capture_partial>1</can_capture_partial>
+                <can_refund>1</can_refund>
+                <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+                <can_void>1</can_void>
+                <!--
+                  Magento\Payment\Model\Method\Adapter::executeCommand() gates every command code
+                  behind its own "can_<code>" flag before the command pool is ever consulted —
+                  silently a no-op if unset, with no exception/log. Without this flag,
+                  Order::cancel() -> Payment::cancel() would still locally cancel the order even
+                  though VoidCommand was never invoked and NovaPay was never contacted.
+                -->
+                <can_cancel>1</can_cancel>
+                <can_use_checkout>1</can_use_checkout>
+                <can_use_internal>0</can_use_internal>
+                <!--
+                  Order status mapping defaults, one per NovaPay session status. Flat field names
+                  (not a status_mapping/* subtree): system.xml config_path only accepts exactly 3
+                  path segments (section/group/field).
+                -->
+                <status_created>novapay_pending</status_created>
+                <status_processing>pending_payment</status_processing>
+                <status_holded>novapay_holded</status_holded>
+                <status_hold_confirmed>novapay_paid</status_hold_confirmed>
+                <status_paid>novapay_paid</status_paid>
+                <status_failed>novapay_failed</status_failed>
+                <status_voided>novapay_refunded</status_voided>
+                <status_expired>novapay_expired</status_expired>
+            </novapay>
+        </payment>
+    </default>
+</config>

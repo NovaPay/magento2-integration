@@ -1,0 +1,160 @@
+<?xml version="1.0"?>
+<!--
+  Copyright © 2026 NovaPay. All rights reserved.
+  Licensed under the MIT License. See LICENSE for details.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="payment">
+            <group id="novapay" translate="label comment" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>NovaPay</label>
+                <comment><![CDATA[The exact postback URL for the scope being edited is shown in the read-only <b>Postback URL</b> field below. It is sent automatically as <b>callback_url</b>; register the same value in your NovaPay merchant admin panel.]]></comment>
+                <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enabled</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="title" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Title</label>
+                </field>
+                <field id="test_mode" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Test Mode</label>
+                    <comment>Switches the API base URL and payment frame URL between the qecom (test) and ecom (production) environments.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="merchant_id" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Merchant ID</label>
+                </field>
+                <field id="private_key" translate="label comment" type="textarea" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Private Key</label>
+                    <comment>Your merchant RSA private key, used to sign outgoing requests. Stored encrypted; never displayed or logged in full — shown as "******" once saved. To change it, clear the field and paste the full new key (including the BEGIN/END lines); leaving "******" unchanged and saving keeps the existing key.</comment>
+                    <frontend_model>NovaPay\Payment\Block\Adminhtml\System\Config\Form\ObscureTextarea</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                </field>
+                <field id="public_key" translate="label comment" type="textarea" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Public Key</label>
+                    <comment>NovaPay's RSA public key, used to verify postback signatures.</comment>
+                </field>
+                <field id="postback_url" translate="label comment" type="label" sortOrder="61" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Postback URL</label>
+                    <comment>Register this URL as the postback (callback) URL in your NovaPay merchant panel. It is also sent automatically as callback_url with every payment session.</comment>
+                    <frontend_model>NovaPay\Payment\Block\Adminhtml\System\Config\Form\PostbackUrl</frontend_model>
+                </field>
+                <field id="payment_action" translate="label comment" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Payment Type</label>
+                    <comment>Direct captures funds immediately. Hold blocks funds; capture is confirmed later from the order (within 29 days).</comment>
+                    <source_model>NovaPay\Payment\Model\Config\Source\PaymentAction</source_model>
+                </field>
+                <field id="refund_flow" translate="label comment" type="select" sortOrder="75" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>NovaPay refund button in order view</label>
+                    <comment>When enabled, orders paid with NovaPay show a single "NovaPay Refund" button in the order view, and these native buttons are hidden: Credit Memo (order view and invoice view), Void (order view) and Refund Offline (credit memo form). For a hold the button cancels the order (the hold is released at NovaPay); for a paid order it opens a refund form and creates the standard online credit memo internally. When disabled, the native Magento credit memo flow is used.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="hold_confirm_flow" translate="label comment" type="select" sortOrder="76" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>NovaPay hold confirmation button in order view</label>
+                    <comment>When enabled, a NovaPay order in hold shows a "Confirm NovaPay Hold" button in the order view, and the standard Invoice button is hidden for NovaPay orders. The button opens a form with the hold amount; a smaller amount is a partial confirmation (requires the Recipient Identifier). The button creates the standard online invoice, which sends the hold confirmation to NovaPay. When disabled, the native Magento invoice flow is used.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="postback_version" translate="label comment" type="select" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Postback Version</label>
+                    <comment>Must match the postback version configured on your NovaPay merchant admin account.</comment>
+                    <source_model>NovaPay\Payment\Model\Config\Source\PostbackVersion</source_model>
+                </field>
+                <field id="success_url" translate="label comment" type="text" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Success URL</label>
+                    <comment>Optional. Leave empty to use the default Magento checkout success page.</comment>
+                </field>
+                <field id="fail_url" translate="label comment" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Fail URL</label>
+                    <comment>Optional. Leave empty to restore the quote and return to the cart with an error message.</comment>
+                </field>
+                <field id="success_redirect_timeout" translate="label comment" type="text" sortOrder="105" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Success Redirect Timeout (sec)</label>
+                    <comment>Seconds after which NovaPay's result page redirects the customer to the Success URL automatically. 0 disables the automatic redirect (the customer clicks the button).</comment>
+                    <validate>validate-zero-or-greater validate-digits</validate>
+                </field>
+                <field id="recipient_identifier" translate="label comment" type="text" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Recipient Identifier (ЄДРПОУ/ІПН)</label>
+                    <comment>Optional. Used in the operations[] list of a partial complete-hold request.</comment>
+                </field>
+                <field id="debug" translate="label comment" type="select" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Logging</label>
+                    <comment>Logs every API request/response and postback to var/log/novapay.log. Critical errors are always logged regardless of this setting. Card data is always masked.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="phone_normalize_enabled" translate="label comment" type="select" sortOrder="121" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Convert Phone to +380 Format</label>
+                    <comment>Converts phone numbers entered as 0XXXXXXXXX or 380XXXXXXXXX (spaces, dashes and brackets ignored) to the +380XXXXXXXXX format required by NovaPay before sending the payment request. Keep enabled unless your store already stores all phones in +380 format.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="phone_validation_enabled" translate="label comment" type="select" sortOrder="122" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Validate Phone Number (+380 mask)</label>
+                    <comment>Before sending the customer to NovaPay, check the shipping and billing phone numbers against the Ukrainian +380 mask (+380XXXXXXXXX / 380XXXXXXXXX / 0XXXXXXXXX). Checks both shipping and billing phone numbers (shipping is skipped for virtual orders). On failure the customer is shown the message below; an invalid shipping phone returns them to the shipping step, an invalid billing phone keeps them on the payment step.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="phone_validation_error_message" translate="label" type="textarea" sortOrder="123" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Phone Validation Error Message</label>
+                    <depends>
+                        <field id="phone_validation_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="sort_order" translate="label" type="text" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Sort Order</label>
+                    <frontend_class>validate-number</frontend_class>
+                </field>
+            </group>
+            <group id="novapay_status_mapping" translate="label comment" type="text" sortOrder="101" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>NovaPay Order Status Mapping</label>
+                <comment>Magento order status applied for each NovaPay session status. Each NovaPay status maps to a fixed Magento order state; only statuses valid for the fixed Magento state are listed. Transient statuses (processing_hold_completion, processing_void) are never mapped here — they cause no status change.</comment>
+                <field id="created" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Created</label>
+                    <comment>Set at order placement, before the customer reaches the payment frame.</comment>
+                    <config_path>payment/novapay/status_created</config_path>
+                    <source_model>Magento\Sales\Model\Config\Source\Order\Status\NewStatus</source_model>
+                </field>
+                <field id="processing" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Processing</label>
+                    <comment>Customer is on the NovaPay payment frame.</comment>
+                    <config_path>payment/novapay/status_processing</config_path>
+                    <source_model>NovaPay\Payment\Model\Config\Source\Order\Status\PendingPayment</source_model>
+                </field>
+                <field id="holded" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Holded</label>
+                    <comment>Hold mode: authorization transaction recorded.</comment>
+                    <config_path>payment/novapay/status_holded</config_path>
+                    <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
+                </field>
+                <field id="hold_confirmed" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Hold Confirmed</label>
+                    <comment>Hold mode: capture confirmed, invoice marked paid.</comment>
+                    <config_path>payment/novapay/status_hold_confirmed</config_path>
+                    <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
+                </field>
+                <field id="paid" translate="label comment" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Paid</label>
+                    <comment>Direct mode: payment captured, paid invoice auto-created.</comment>
+                    <config_path>payment/novapay/status_paid</config_path>
+                    <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
+                </field>
+                <field id="failed" translate="label comment" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Failed</label>
+                    <comment>Order stays pending payment, stock stays reserved: the customer can retry in the same NovaPay session.</comment>
+                    <config_path>payment/novapay/status_failed</config_path>
+                    <source_model>NovaPay\Payment\Model\Config\Source\Order\Status\PendingPayment</source_model>
+                </field>
+                <field id="voided" translate="label comment" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Voided (session fully refunded)</label>
+                    <comment>Credit memo completes / hold canceled. Partial void postbacks never change order status.</comment>
+                    <config_path>payment/novapay/status_voided</config_path>
+                    <source_model>NovaPay\Payment\Model\Config\Source\Order\Status\Closed</source_model>
+                </field>
+                <field id="expired" translate="label comment" type="select" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Expired</label>
+                    <comment>Unpaid session or uncaptured hold expired after 29 days; pending order canceled.</comment>
+                    <config_path>payment/novapay/status_expired</config_path>
+                    <source_model>NovaPay\Payment\Model\Config\Source\Order\Status\Canceled</source_model>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

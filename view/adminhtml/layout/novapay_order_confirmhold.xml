@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+  Copyright © 2026 NovaPay. All rights reserved.
+  Licensed under the MIT License. See LICENSE for details.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- Form of the optional "Confirm NovaPay Hold" button (novapay/order/confirmHold). -->
+        <referenceContainer name="content">
+            <block class="NovaPay\Payment\Block\Adminhtml\Order\HoldConfirm\Form"
+                   name="novapay_order_hold_confirm_form"
+                   template="NovaPay_Payment::order/hold_confirm/form.phtml"/>
+        </referenceContainer>
+    </body>
+</page>

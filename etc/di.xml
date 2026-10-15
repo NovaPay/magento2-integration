@@ -1,0 +1,254 @@
+<?xml version="1.0"?>
+<!--
+  Copyright © 2026 NovaPay. All rights reserved.
+  Licensed under the MIT License. See LICENSE for details.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <!-- Signature service contract: implementation lives in Gateway/ (request signing is a gateway
+         concern), only the contract is exposed under Api/. -->
+    <preference for="NovaPay\Payment\Api\SignatureServiceInterface" type="NovaPay\Payment\Gateway\SignatureService" />
+
+    <!-- Gateway config: typed accessors bound to methodCode "novapay" -->
+    <type name="NovaPay\Payment\Gateway\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">NovaPay\Payment\Gateway\Config::CODE</argument>
+        </arguments>
+    </type>
+
+    <!--
+      Keep the credential/merchant-identifying fields out of
+      `app:config:dump`'s app/etc/config.php output entirely — they move to app/etc/env.php
+      instead (per-environment, never committed), same as core payment methods' own API keys/secrets.
+      private_key is already Encrypted-backend ciphertext in config.php, but sensitive is stricter
+      than encrypted: it excludes the field from the dump file altogether rather than merely
+      encrypting the value within it.
+    -->
+    <type name="Magento\Config\Model\Config\TypePool">
+        <arguments>
+            <argument name="sensitive" xsi:type="array">
+                <item name="payment/novapay/private_key" xsi:type="string">1</item>
+                <item name="payment/novapay/public_key" xsi:type="string">1</item>
+                <item name="payment/novapay/merchant_id" xsi:type="string">1</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!--
+      Dedicated Monolog channel: every NovaPay log line
+      lands ONLY in var/log/novapay.log ({@see NovaPay\Payment\Logger\Handler}), never in
+      system.log/debug.log/exception.log. Based on the plain third-party \Monolog\Logger, NOT
+      Magento\Framework\Logger\Monolog — a virtualType on the latter silently inherits app/etc/di.xml's
+      real "main" logger handlers array (system/debug/syslog) via DI array-merge-by-key, causing a
+      live-verified dual-write; \Monolog\Logger has no core di.xml config, so it starts empty.
+    -->
+    <virtualType name="NovaPay\Payment\Logger\VirtualLogger" type="Monolog\Logger">
+        <arguments>
+            <argument name="name" xsi:type="string">novapay</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="novapay" xsi:type="object">NovaPay\Payment\Logger\Handler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Log path for NovaPay\Payment\Logger\Handler, BP-relative (Magento\Framework\Filesystem\Driver\File
+         resolves it against BP, same as core magento/module-payment's own VirtualDebug/VirtualLogger
+         "fileName" argument pointing at var/log/payment.log) -->
+    <type name="NovaPay\Payment\Logger\Handler">
+        <arguments>
+            <argument name="fileName" xsi:type="string">/var/log/novapay.log</argument>
+        </arguments>
+    </type>
+
+    <type name="NovaPay\Payment\Gateway\Http\Client">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Gateway\Command\InitializeCommand">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Gateway\Command\CaptureCommand">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Gateway\Command\VoidCommand">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Gateway\Command\RefundCommand">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <!--
+      Request-scoped list of failed capture/void/refund calls: must stay one shared instance so the
+      admin controllers/plugins read what the gateway commands recorded.
+    -->
+    <type name="NovaPay\Payment\Model\Order\GatewayFailureNoteRegistry" shared="true"/>
+    <type name="NovaPay\Payment\Model\CheckoutOrchestrator">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Model\PostbackProcessor">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Model\StatusMapper">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Model\Refund\NovaPayRefundState">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Model\OrderStatusApplier">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Model\Postback\V1Parser">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Model\Postback\V2Parser">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Model\Postback\V3Parser">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Model\Postback\OrderMatcher">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <!--
+      NovaPay\Payment\Model\Postback\UnimplementedParser is abstract (V1Parser/V2Parser above are its
+      only concrete subclasses, already wired) — the object manager never instantiates it directly,
+      so it gets no entry of its own here.
+    -->
+    <type name="NovaPay\Payment\Controller\Postback\Index">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Controller\Redirect\Index">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+    <type name="NovaPay\Payment\Cron\SyncStatus">
+        <arguments>
+            <argument name="logger" xsi:type="object">NovaPay\Payment\Logger\VirtualLogger</argument>
+        </arguments>
+    </type>
+
+    <!-- Reads admin config values as-is; no per-field value transformation needed yet -->
+    <virtualType name="NovaPay\Payment\Gateway\Config\ValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">NovaPay\Payment\Gateway\Config</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="NovaPay\Payment\Gateway\Config\ValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">NovaPay\Payment\Gateway\Config\ValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!--
+      "initialize" runs at order placement instead of authorize/capture (order is created pending;
+      NovaPay is only contacted afterwards by the redirect controller).
+
+      Admin operations (hold, capture, refunds):
+      - "capture": online invoice capture on a holded order -> POST /v1/complete-hold.
+      - "void" and "cancel": both native Magento hold-cancellation paths (order-level Cancel and
+        payment-level Void) -> POST /v1/void as a hold cancellation. See
+        NovaPay\Payment\Gateway\Command\VoidCommand class docblock for why one implementation
+        correctly serves both pool slots (and why it is also safe when reached indirectly from this
+        module's own postback pipeline).
+      - "refund": online credit memo on a paid/hold_confirmed order -> POST /v1/void as a refund.
+    -->
+    <virtualType name="NovaPay\Payment\Gateway\CommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="initialize" xsi:type="string">NovaPay\Payment\Gateway\Command\InitializeCommand</item>
+                <item name="capture" xsi:type="string">NovaPay\Payment\Gateway\Command\CaptureCommand</item>
+                <item name="void" xsi:type="string">NovaPay\Payment\Gateway\Command\VoidCommand</item>
+                <item name="cancel" xsi:type="string">NovaPay\Payment\Gateway\Command\VoidCommand</item>
+                <item name="refund" xsi:type="string">NovaPay\Payment\Gateway\Command\RefundCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!--
+      "currency" slot: native Magento availability guard (NovaPay is UAH-only).
+      Magento\Payment\Model\Method\Adapter::canUseForCurrency() reads this pool; Magento's own
+      Magento\Payment\Model\Checks\CanUseForCurrency specification calls it for every payment method
+      during checkout, so a non-UAH base-currency store hides the method automatically.
+    -->
+    <virtualType name="NovaPay\Payment\Gateway\ValidatorPool" type="Magento\Payment\Gateway\Validator\ValidatorPool">
+        <arguments>
+            <argument name="validators" xsi:type="array">
+                <item name="currency" xsi:type="string">NovaPay\Payment\Gateway\Validator\CurrencyValidator</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!--
+      No explicit wiring needed: Gateway\Http\Client type-hints Magento\Framework\HTTP\Client\CurlFactory,
+      which Magento auto-resolves (any "...Factory"-suffixed constructor argument is generated/injected
+      automatically). Client calls $curlFactory->create(['sslVersion' => CURL_SSLVERSION_TLSv1_2]) once
+      per request, which both pins TLS 1.2 and gives it a fresh Curl instance per call instead of a
+      shared singleton (Curl keeps request state — headers, timeouts — as instance properties).
+    -->
+
+    <!--
+      Postback schema version ("Postback Version" admin field) → parser strategy. See
+      NovaPay\Payment\Model\Postback\ParserPool / PostbackProcessor.
+    -->
+    <type name="NovaPay\Payment\Model\Postback\ParserPool">
+        <arguments>
+            <argument name="parsers" xsi:type="array">
+                <item name="v1" xsi:type="object">NovaPay\Payment\Model\Postback\V1Parser</item>
+                <item name="v2" xsi:type="object">NovaPay\Payment\Model\Postback\V2Parser</item>
+                <item name="v3" xsi:type="object">NovaPay\Payment\Model\Postback\V3Parser</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- Payment method virtual adapter, referenced as payment/novapay/model in etc/config.xml -->
+    <virtualType name="NovaPay\Payment\Model\Adapter" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">NovaPay\Payment\Gateway\Config::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">NovaPay\Payment\Gateway\Config\ValueHandlerPool</argument>
+            <argument name="validatorPool" xsi:type="object">NovaPay\Payment\Gateway\ValidatorPool</argument>
+            <argument name="commandPool" xsi:type="object">NovaPay\Payment\Gateway\CommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Hide Invoice / Ship / Hold on NovaPay orders that still await payment
+         (NovaPay\Payment\Plugin\Order\RestrictUnpaidActionsPlugin). canCancel() is not touched. -->
+    <type name="Magento\Sales\Model\Order">
+        <plugin name="novapay_restrict_unpaid_actions"
+                type="NovaPay\Payment\Plugin\Order\RestrictUnpaidActionsPlugin" />
+    </type>
+</config>

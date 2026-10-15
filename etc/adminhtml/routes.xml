@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  Copyright © 2026 NovaPay. All rights reserved.
+  Licensed under the MIT License. See LICENSE for details.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
+    <!--
+      Admin routes of the optional NovaPay refund button (novapay/order/refund, refundPost,
+      cancelHold). Each controller declares its ACL resource: Magento_Sales::creditmemo for the
+      refund form, Magento_Sales::cancel for releasing a hold, the same resources as the native
+      Credit Memo and Cancel buttons.
+    -->
+    <router id="admin">
+        <route id="novapay" frontName="novapay">
+            <module name="NovaPay_Payment" before="Magento_Backend"/>
+        </route>
+    </router>
+</config>

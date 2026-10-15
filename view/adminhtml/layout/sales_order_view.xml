@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+  Copyright © 2026 NovaPay. All rights reserved.
+  Licensed under the MIT License. See LICENSE for details.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!--
+          Order-view info block (session id, NovaPay status, paytype, RRN, approval, masked PAN,
+          per-line refunded amounts, postback history summary). Rendered into core Magento's own
+          container (not method-specific) — the template renders nothing unless the order was
+          actually paid with NovaPay. No new admin route/ACL required.
+        -->
+        <referenceContainer name="order_additional_info">
+            <block class="NovaPay\Payment\Block\Adminhtml\Order\View\NovaPayInfo"
+                   name="novapay_order_info"
+                   template="NovaPay_Payment::order/view/novapay_info.phtml"/>
+        </referenceContainer>
+    </body>
+</page>

@@ -1,0 +1,127 @@
+<?php
+/**
+ * Copyright © 2026 NovaPay. All rights reserved.
+ * Licensed under the MIT License. See LICENSE for details.
+ */
+
+/**
+ * @var \NovaPay\Payment\Block\Adminhtml\Order\View\NovaPayInfo $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+if (!$block->isNovaPayOrder()) {
+    return;
+}
+?>
+<div class="admin__page-section novapay-order-info">
+    <div class="admin__page-section-title">
+        <span class="title"><?= $escaper->escapeHtml(__('NovaPay')) ?></span>
+    </div>
+    <div class="admin__page-section-content">
+        <table class="admin__table-secondary">
+            <tbody>
+            <tr>
+                <th><?= $escaper->escapeHtml(__('Session ID')) ?></th>
+                <td><?= $escaper->escapeHtml((string)$block->getSessionId()) ?></td>
+            </tr>
+            <tr>
+                <th><?= $escaper->escapeHtml(__('NovaPay Status')) ?></th>
+                <td><?= $escaper->escapeHtml((string)$block->getNovaPayStatus()) ?></td>
+            </tr>
+            <tr>
+                <th><?= $escaper->escapeHtml(__('Last Event')) ?></th>
+                <td><?= $escaper->escapeHtml((string)$block->getLastEvent()) ?></td>
+            </tr>
+            <tr>
+                <th><?= $escaper->escapeHtml(__('Payment Type')) ?></th>
+                <td><?= $escaper->escapeHtml((string)$block->getPaytype()) ?></td>
+            </tr>
+            <tr>
+                <th><?= $escaper->escapeHtml(__('RRN')) ?></th>
+                <td><?= $escaper->escapeHtml((string)$block->getRrn()) ?></td>
+            </tr>
+            <tr>
+                <th><?= $escaper->escapeHtml(__('Approval Code')) ?></th>
+                <td><?= $escaper->escapeHtml((string)$block->getApproval()) ?></td>
+            </tr>
+            <tr>
+                <th><?= $escaper->escapeHtml(__('Card')) ?></th>
+                <td>
+                    <?= $escaper->escapeHtml((string)$block->getMaskedPan()) ?>
+                    <?php if ($block->getCardType() || $block->getCardBank() || $block->getCardCountry()): ?>
+                        (<?= $escaper->escapeHtml(implode(', ', array_filter([
+                            $block->getCardType(),
+                            $block->getCardBank(),
+                            $block->getCardCountry(),
+                        ]))) ?>)
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <tr>
+                <th><?= $escaper->escapeHtml(__('Last Postback At')) ?></th>
+                <td><?= $escaper->escapeHtml((string)$block->getLastPostbackAt()) ?></td>
+            </tr>
+            <tr>
+                <th><?= $escaper->escapeHtml(__('Postbacks Processed')) ?></th>
+                <td><?= (int)$block->getPostbackCount() ?></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <?php $refundedItems = $block->getRefundedItems(); ?>
+        <?php if ($refundedItems): ?>
+            <h4><?= $escaper->escapeHtml(__('Refunded Order Lines')) ?></h4>
+            <table class="admin__table-secondary">
+                <thead>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('Item')) ?></th>
+                    <th><?= $escaper->escapeHtml(__('Qty Refunded')) ?></th>
+                    <th><?= $escaper->escapeHtml(__('Amount Refunded')) ?></th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($refundedItems as $row): ?>
+                    <tr>
+                        <td><?= $escaper->escapeHtml((string)$row['name']) ?></td>
+                        <td><?= $escaper->escapeHtml((string)$row['qty_refunded']) ?></td>
+                        <td>
+                            <?= $escaper->escapeHtml(
+                                $block->getOrder()->getBaseCurrency()->formatTxt($row['amount_refunded'])
+                            ) ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+
+        <?php $refundedOperations = $block->getRefundedOperations(); ?>
+        <?php if ($refundedOperations): ?>
+            <h4><?= $escaper->escapeHtml(__('NovaPay-Confirmed Partial Refunds')) ?></h4>
+            <table class="admin__table-secondary">
+                <thead>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('Operation ID')) ?></th>
+                    <th><?= $escaper->escapeHtml(__('Refunded Amount (Cumulative)')) ?></th>
+                    <th><?= $escaper->escapeHtml(__('Recorded At')) ?></th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($refundedOperations as $operation): ?>
+                    <tr>
+                        <td><?= $escaper->escapeHtml((string)($operation['id'] ?? '')) ?></td>
+                        <td>
+                            <?= $escaper->escapeHtml(
+                                $block->getOrder()->getBaseCurrency()->formatTxt(
+                                    (float)($operation['refund_amount'] ?? 0)
+                                )
+                            ) ?>
+                        </td>
+                        <td><?= $escaper->escapeHtml((string)($operation['recorded_at'] ?? '')) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </div>
+</div>

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+  Copyright © 2026 NovaPay. All rights reserved.
+  Licensed under the MIT License. See LICENSE for details.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+    <group id="default">
+        <!--
+          Recovers from missed postbacks by polling /v1/get-status for orders stuck in a
+          "still waiting on NovaPay" status; feeds the same StatusMapper pipeline a real postback
+          uses (NovaPay\Payment\Model\PostbackProcessor::applyParsed()).
+        -->
+        <job name="novapay_sync_status" instance="NovaPay\Payment\Cron\SyncStatus" method="execute">
+            <schedule>*/15 * * * *</schedule>
+        </job>
+    </group>
+</config>

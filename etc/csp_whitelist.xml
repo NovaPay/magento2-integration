@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright © 2026 NovaPay. All rights reserved.
+  Licensed under the MIT License. See LICENSE for details.
+-->
+<!--
+  Checkout is a full top-level redirect to NovaPay's hosted page, never an iframe/form-POST, so
+  frame-src/form-action are not functionally required. Whitelisted anyway as defense-in-depth for
+  the two browser-facing hostnames (test qecom.novapay.ua / live ecom.novapay.ua) — widening
+  permissions only, never breaks anything.
+-->
+<csp_whitelist xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Csp:etc/csp_whitelist.xsd">
+    <policies>
+        <policy id="frame-src">
+            <values>
+                <value id="novapay_qecom_frame" type="host">qecom.novapay.ua</value>
+                <value id="novapay_ecom_frame" type="host">ecom.novapay.ua</value>
+            </values>
+        </policy>
+        <policy id="form-action">
+            <values>
+                <value id="novapay_qecom_form" type="host">qecom.novapay.ua</value>
+                <value id="novapay_ecom_form" type="host">ecom.novapay.ua</value>
+            </values>
+        </policy>
+    </policies>
+</csp_whitelist>

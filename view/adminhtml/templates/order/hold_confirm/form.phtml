@@ -1,0 +1,106 @@
+<?php
+/**
+ * Copyright © 2026 NovaPay. All rights reserved.
+ * Licensed under the MIT License. See LICENSE for details.
+ */
+
+/**
+ * @var \NovaPay\Payment\Block\Adminhtml\Order\HoldConfirm\Form $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+$order = $block->getOrder();
+if ($order === null) {
+    return;
+}
+
+$pendingNotice = $block->getPendingNotice();
+$canSubmit = $block->canSubmit();
+$partialAllowed = $block->isPartialAllowed();
+$recipientIdentifier = $block->getRecipientIdentifier();
+$holdAmount = $block->getHoldAmount();
+$amountValue = $canSubmit ? $block->getAmountValue() : number_format($holdAmount, 2, '.', '');
+?>
+<form id="novapay-hold-confirm-form" class="novapay-hold-confirm-form" method="post"
+      action="<?= $escaper->escapeUrl($block->getSubmitUrl()) ?>"
+      data-mage-init='<?= $escaper->escapeHtmlAttr(
+          '{"NovaPay_Payment/js/order/hold-confirm-form": ' . $block->getJsConfig() . '}'
+      ) ?>'>
+    <input name="form_key" type="hidden" value="<?= $escaper->escapeHtmlAttr($block->getFormKey()) ?>"/>
+
+    <?php if ($pendingNotice !== null): ?>
+        <div class="message message-notice notice novapay-hold-confirm-pending">
+            <div><?= $escaper->escapeHtml($pendingNotice) ?></div>
+        </div>
+    <?php elseif (!$partialAllowed): ?>
+        <div class="message message-warning warning novapay-hold-confirm-no-recipient">
+            <div>
+                <?= $escaper->escapeHtml(__(
+                    'The Recipient Identifier (ЄДРПОУ/ІПН) is not configured in the NovaPay payment settings: '
+                    . 'only the full hold amount can be confirmed.'
+                )) ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <section class="admin__page-section">
+        <div class="admin__page-section-title">
+            <span class="title"><?= $escaper->escapeHtml(__('Hold Confirmation')) ?></span>
+        </div>
+        <table class="data-table admin__table-secondary order-subtotal-table novapay-hold-confirm-summary">
+            <tbody>
+            <tr>
+                <th><?= $escaper->escapeHtml(__('Hold Amount')) ?></th>
+                <td class="novapay-hold-amount">
+                    <?= $escaper->escapeHtml($block->formatAmount($holdAmount)) ?>
+                </td>
+            </tr>
+            <tr>
+                <th><?= $escaper->escapeHtml(__('Recipient Identifier (ЄДРПОУ/ІПН)')) ?></th>
+                <td class="novapay-hold-recipient">
+                    <?= $escaper->escapeHtml(
+                        $recipientIdentifier !== '' ? $recipientIdentifier : __('Not configured')
+                    ) ?>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="admin__field novapay-hold-confirm-amount-field">
+            <label class="admin__field-label" for="novapay-hold-confirm-amount">
+                <span><?= $escaper->escapeHtml(__('Amount to Confirm')) ?></span>
+            </label>
+            <div class="admin__field-control">
+                <input type="text" inputmode="decimal"
+                       class="input-text admin__control-text novapay-hold-confirm-amount"
+                       id="novapay-hold-confirm-amount" name="amount"
+                       value="<?= $escaper->escapeHtmlAttr($amountValue) ?>"
+                       <?= $canSubmit && $partialAllowed ? '' : 'readonly="readonly"' ?>
+                       <?= $canSubmit ? '' : 'disabled="disabled"' ?>/>
+                <div class="mage-error novapay-hold-confirm-error no-display" role="alert"></div>
+                <div class="note">
+                    <?= $escaper->escapeHtml(__(
+                        'A smaller amount is a partial confirmation: NovaPay returns the difference to the payer '
+                        . 'automatically.'
+                    )) ?>
+                </div>
+                <div class="note">
+                    <?= $escaper->escapeHtml(__(
+                        'The confirmation creates an invoice. A partial amount must cover whole items together '
+                        . 'with the shipping; otherwise the nearest lower and higher amounts are suggested.'
+                    )) ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <a class="action-default back" href="<?= $escaper->escapeUrl($block->getBackUrl()) ?>">
+                <span><?= $escaper->escapeHtml(__('Back')) ?></span>
+            </a>
+            <button type="submit" class="action-primary novapay-hold-confirm-submit"
+                <?= $canSubmit ? '' : 'disabled="disabled"' ?>>
+                <span><?= $escaper->escapeHtml(__('Confirm Hold')) ?></span>
+            </button>
+        </div>
+    </section>
+</form>
