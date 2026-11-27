@@ -4,6 +4,51 @@ All notable changes to `novapay/module-payment` are documented here. Format foll
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-11-26
+
+### Added
+
+- NovaPay refund form: editable **Amount to Refund** per line and for shipping (a quantity fills it
+  with quantity x price). A partial refund is no longer tied to the product price: each line up to
+  what was paid for it minus what was already refunded, the total up to the captured amount minus
+  what was already refunded (validated in the browser and on the server). Lines refunded by
+  quantity stay quantity refunds; other amounts and shipping become the credit memo's
+  Adjustment Refund with quantity 0. One credit memo, one `POST /v1/void` with the total.
+- Per-line refund ledger in the payment (`novapay_refund_attribution`): "Refunded: X" next to each
+  refunded line and a "Refunded via NovaPay (not tied to an item)" row on the refund form.
+- Automatic OFFLINE credit memo for a refund made in the NovaPay cabinet: the difference between
+  NovaPay's refunded amount and Magento's (partial: Adjustment Refund, order stays Paid via
+  NovaPay; full: only when nothing was refunded in Magento, everything still refundable with Return
+  to Stock per the auto-return setting, order closes as Refunded via NovaPay). Only on an explicit
+  numeric `refunded_amount` from `/v1/get-status`. Idempotent per NovaPay operation id and refunded
+  amount; ledger entry and comment are saved with the credit memo; falls back to the "reconcile
+  manually" comment when the credit memo cannot be created. Log events
+  `refund.partial_outside_magento_creditmemo`, `refund.full_outside_magento_creditmemo` (NOTICE).
+- Every online refund of a NovaPay order (credit memo form, NovaPay refund form, REST invoice refund)
+  holds the session's postback lock until its credit memo is saved, so the `voided` postback of that
+  refund is never taken for a cabinet refund; a refund on an order a postback changed after it was
+  loaded is refused ("reload the page and try again").
+- Refund form amounts adding up to the whole remaining amount are sent as a full refund.
+
+### Changed
+
+- Order view of an open NovaPay hold (NovaPay refund button option on): the native **Cancel** button
+  is hidden, the **NovaPay Refund** button already releases the hold, with a confirmation. Cancel
+  stays on unpaid and failed NovaPay orders and on orders paid with other methods.
+- The refund gateway command accepts an Adjustment Refund only when it comes from the NovaPay refund
+  form (per-line attribution adds up to it); Adjustment Fee stays blocked.
+- History comment of a confirmed partial refund starts with "Received status voided (postback):"
+  ("Received status voided:" from the get-status cron).
+- Refund form: no total or full-refund hint when the form is read-only; invalid quantities and amounts
+  are outlined red with an inline error, the total then shows the valid entries only and the submit
+  stays disabled; the confirmation buttons ("Cancel" / "Refund") follow the admin locale.
+
+### Fixed
+
+- NovaPay refund form: a quantity or amount set back to 0 no longer switches the form to a partial
+  refund of 0,00. When every field is empty or 0 the form shows the full remaining amount and
+  confirms a full refund (spec 8.2.5), as when nothing was touched.
+
 ## [1.0.0] - 2026-10-14
 
 Initial release. NovaPay internet acquiring for Magento 2.4.8 (p1–p5), PHP 8.3/8.4.

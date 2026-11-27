@@ -89,6 +89,7 @@ class NovaPayRefundState
         $amount = 0.0;
         $refunded = 0.0;
         $used = [];
+        $explicit = true;
 
         foreach ($operations ?? [] as $operation) {
             if (!is_array($operation) || !is_scalar($operation['amount'] ?? null)) {
@@ -99,6 +100,7 @@ class NovaPayRefundState
             $refundedAmount = $operation['refunded_amount'] ?? null;
             $amount += $operationAmount;
             $refunded += is_scalar($refundedAmount) ? (float)$refundedAmount : $operationAmount;
+            $explicit = $explicit && is_numeric($refundedAmount);
             $used[] = $operation;
         }
 
@@ -106,7 +108,7 @@ class NovaPayRefundState
             return null;
         }
 
-        return new RefundSnapshot($amount, $refunded, $used);
+        return new RefundSnapshot($amount, $refunded, $used, $explicit);
     }
 
     /**

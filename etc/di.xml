@@ -251,4 +251,17 @@
         <plugin name="novapay_restrict_unpaid_actions"
                 type="NovaPay\Payment\Plugin\Order\RestrictUnpaidActionsPlugin" />
     </type>
+
+    <!-- An online refund of a NovaPay order (credit memo form, NovaPay refund form, REST invoice
+         refund) holds the per-session postback lock until its credit memo is committed
+         (NovaPay\Payment\Plugin\Sales\OnlineRefundSessionLockPlugin), so the voided postback never
+         mistakes it for a refund made in the NovaPay cabinet. -->
+    <type name="Magento\Sales\Api\CreditmemoManagementInterface">
+        <plugin name="novapay_online_refund_session_lock"
+                type="NovaPay\Payment\Plugin\Sales\OnlineRefundSessionLockPlugin" />
+    </type>
+    <type name="Magento\Sales\Api\RefundInvoiceInterface">
+        <plugin name="novapay_online_refund_session_lock"
+                type="NovaPay\Payment\Plugin\Sales\OnlineRefundSessionLockPlugin" />
+    </type>
 </config>

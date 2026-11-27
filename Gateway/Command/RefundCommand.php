@@ -20,6 +20,7 @@ use NovaPay\Payment\Gateway\Http\Exception\ApiException;
 use NovaPay\Payment\Gateway\Request\VoidBuilder;
 use NovaPay\Payment\Model\Order\GatewayFailureNote;
 use NovaPay\Payment\Model\Order\GatewayFailureNoteRegistry;
+use NovaPay\Payment\Model\Refund\CreditmemoRefunder;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -35,8 +36,12 @@ use Psr\Log\LoggerInterface;
  *
  * Business rules enforced here:
  * - the order's stored `novapay_status` must be `paid` or `hold_confirmed`.
- * - adjustment fees/refunds are never supported — any non-zero adjustment on the credit memo blocks
- *   the whole refund.
+ * - "Adjustment Fee" (`adjustment_negative`) is never supported. "Adjustment Refund"
+ *   (`adjustment_positive`) is accepted only when the credit memo was built by the NovaPay refund
+ *   form ({@see CreditmemoRefunder}): it carries the per-line attribution
+ *   {@see CreditmemoRefunder::ADJUSTMENT_LINES} (an in-memory credit memo value no request can set)
+ *   and the attributed amounts add up to the adjustment. An adjustment typed into the native credit
+ *   memo form has no attribution and still blocks the refund.
  * - **only one NovaPay refund per order is currently supported**: NovaPay has not confirmed
  *   whether a second `/v1/void` after a partial refund refunds the remainder, double-refunds the
  *   already-returned part, or is rejected outright — until that is confirmed, any refund attempt
@@ -123,7 +128,7 @@ class RefundCommand implements CommandInterface
         $this->assertPaidViaNovaPay($payment, $order);
 
         $creditmemo = $this->readCreditmemo($payment);
-        $this->assertNoAdjustments($creditmemo);
+        $this->assertSupportedAdjustments($creditmemo);
         $this->assertNoPriorRefund($order, $payment, $amount);
 
         $isFullRefund = $this->isFullRefund($order);
@@ -224,22 +229,48 @@ class RefundCommand implements CommandInterface
     }
 
     /**
-     * Adjustment fees/refunds are never supported.
+     * Accept only the "Adjustment Refund" of the NovaPay refund form, never an "Adjustment Fee".
+     *
+     * The adjustment refund must carry the form's per-line attribution and its amounts must add up to
+     * the adjustment (see class docblock).
      *
      * @param Creditmemo $creditmemo
      * @return void
      * @throws LocalizedException
      */
-    private function assertNoAdjustments(Creditmemo $creditmemo): void
+    private function assertSupportedAdjustments(Creditmemo $creditmemo): void
     {
-        $adjustmentPositive = abs((float)$creditmemo->getBaseAdjustmentPositive());
-        $adjustmentNegative = abs((float)$creditmemo->getBaseAdjustmentNegative());
-
-        if ($adjustmentPositive > self::AMOUNT_TOLERANCE || $adjustmentNegative > self::AMOUNT_TOLERANCE) {
+        if (abs((float)$creditmemo->getBaseAdjustmentNegative()) > self::AMOUNT_TOLERANCE) {
             throw new LocalizedException(
                 __(
-                    'NovaPay refunds do not support adjustment fees or refunds. Remove them from '
-                    . 'the credit memo and try again.'
+                    'NovaPay refunds do not support an adjustment fee. Remove it from the credit memo '
+                    . 'and try again.'
+                )
+            );
+        }
+
+        $adjustmentPositive = (float)$creditmemo->getBaseAdjustmentPositive();
+        if (abs($adjustmentPositive) <= self::AMOUNT_TOLERANCE) {
+            return;
+        }
+
+        $attribution = $creditmemo->getData(CreditmemoRefunder::ADJUSTMENT_LINES);
+        $attributed = 0.0;
+        $valid = is_array($attribution) && $attribution !== [];
+        foreach (is_array($attribution) ? $attribution : [] as $amount) {
+            if (!is_numeric($amount) || (float)$amount <= 0.0) {
+                $valid = false;
+                break;
+            }
+            $attributed += (float)$amount;
+        }
+
+        if (!$valid || abs(round($attributed, 2) - $adjustmentPositive) > self::AMOUNT_TOLERANCE) {
+            throw new LocalizedException(
+                __(
+                    'NovaPay refunds support an adjustment refund only when the refund amount is entered '
+                    . 'per item in the NovaPay refund form. Remove the adjustment from the credit memo '
+                    . 'and try again.'
                 )
             );
         }
@@ -347,9 +378,9 @@ class RefundCommand implements CommandInterface
      * `RefundOperation::execute()` (native Magento, the only caller that ever reaches this command)
      * has already added this credit memo's own amount into `$order`'s `base_total_refunded` before
      * calling the gateway — see the class docblock — so "nothing left to refund after this memo" is
-     * exactly `base_total_paid - base_total_refunded == 0` at this point. Adjustments are blocked
-     * above, so there is no way to reach that balance without having actually refunded every item
-     * and any shipping in full; no separate per-item qty check is needed.
+     * exactly `base_total_paid - base_total_refunded == 0` at this point. That balance is the whole
+     * captured amount being returned, however the form split it into quantities and adjustment
+     * refund, so a bare `/v1/void` (full refund) is correct; no separate per-item qty check is needed.
      *
      * @param Order $order
      * @return bool

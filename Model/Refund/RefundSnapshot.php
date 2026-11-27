@@ -21,12 +21,28 @@ class RefundSnapshot
      * @param float $refunded refunded amount of the operations (cumulative)
      * @param array $operations the raw `operations[]` entries the amounts were read from, `[]` when
      *     the snapshot comes from Magento's ledger
+     * @param bool $explicit whether every operation carried an explicit numeric `refunded_amount`
+     *     (a missing/null one is read as "fully refunded", which is not proof enough to create a
+     *     credit memo automatically)
      */
     public function __construct(
         private readonly float $amount,
         private readonly float $refunded,
-        private readonly array $operations = []
+        private readonly array $operations = [],
+        private readonly bool $explicit = false
     ) {
+    }
+
+    /**
+     * Whether every operation carried an explicit numeric `refunded_amount`.
+     *
+     * Only such a snapshot may drive an automatic credit memo for a refund made outside Magento.
+     *
+     * @return bool
+     */
+    public function isExplicit(): bool
+    {
+        return $this->explicit;
     }
 
     /**

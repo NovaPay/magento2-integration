@@ -24,9 +24,12 @@ use Psr\Log\LoggerInterface;
 /**
  * Submits the NovaPay refund form: creates the standard online credit memo.
  *
- * The form posts `refund_mode`: `partial` refunds only the entered quantities, `full` refunds all
- * remaining items and shipping and is only accepted when no quantity was entered. A `partial` post
- * without any quantity is rejected, so a form that lost its quantities never becomes a full refund.
+ * The form posts `refund_mode`: `partial` refunds only the entered quantities and amounts
+ * (`items[id][qty]`, `items[id][amount]`, `shipping_refund_amount`), `full` refunds all remaining
+ * items and shipping and is only accepted when nothing was entered. A `partial` post without any
+ * quantity or amount is rejected, so a form that lost its values never becomes a full refund. The
+ * input is validated and mapped by {@see RefundCalculator::buildPlan()} (the server is authoritative:
+ * per-line amount within the line's refundable amount, total within captured minus refunded).
  * The credit memo is built and refunded by {@see CreditmemoRefunder}, the same way the native credit
  * memo form does it, so the module's refund gateway command sends `POST /v1/void` and every
  * existing refund guard applies. Any error is shown to the admin, nothing is saved, and the entered
@@ -41,6 +44,11 @@ class RefundPost extends AbstractOrderAction implements HttpPostActionInterface
 
     public const MODE_FULL = 'full';
     public const MODE_PARTIAL = 'partial';
+
+    /**
+     * Entered amounts this close to the whole remaining amount are a full refund.
+     */
+    private const FULL_AMOUNT_TOLERANCE = 0.005;
 
     /**
      * @param Context $context
@@ -109,7 +117,7 @@ class RefundPost extends AbstractOrderAction implements HttpPostActionInterface
             $this->failureHistoryWriter->writePending();
         }
 
-        $this->formDataStore->save($orderId, $this->getPostedItems());
+        $this->formDataStore->save($orderId, $this->getPostedItems(), $this->getShippingInput());
         $redirect = $this->resultRedirectFactory->create();
         $redirect->setPath('novapay/order/refund', ['order_id' => $orderId]);
 
@@ -136,8 +144,10 @@ class RefundPost extends AbstractOrderAction implements HttpPostActionInterface
         }
 
         $rows = $this->calculator->getRows($invoice);
+        $shippingRow = $this->calculator->getShippingRow($invoice);
 
         $qtyInput = [];
+        $amountInput = [];
         $backToStock = [];
         foreach ($this->getPostedItems() as $itemId => $itemData) {
             if (!is_array($itemData)) {
@@ -146,44 +156,78 @@ class RefundPost extends AbstractOrderAction implements HttpPostActionInterface
             if (array_key_exists('qty', $itemData)) {
                 $qtyInput[$itemId] = $itemData['qty'];
             }
+            if (array_key_exists('amount', $itemData)) {
+                $amountInput[$itemId] = $itemData['amount'];
+            }
             $backToStock[(int)$itemId] = !empty($itemData['back_to_stock']);
         }
 
-        $qtys = $this->calculator->normalizeQtys($rows, $qtyInput);
-        $this->checkRefundMode($qtys);
-        if ($qtys !== []) {
+        $fullAmount = $this->calculator->getFullRefundAmount($order);
+        $plan = $this->calculator->buildPlan(
+            $rows,
+            $shippingRow,
+            $qtyInput,
+            $amountInput,
+            $this->getShippingInput(),
+            $fullAmount
+        );
+        $this->checkRefundMode($plan->isEmpty());
+
+        if ($plan->isEmpty() || abs($plan->getTotal() - $fullAmount) <= self::FULL_AMOUNT_TOLERANCE) {
+            // Nothing entered, or amounts adding up to the whole remaining amount: a full refund, built
+            // like the native full credit memo so its total is exactly the remainder and the order closes.
+            $creditmemo = $this->refunder->refund($invoice, array_keys($rows), [], $backToStock);
+        } else {
             $partialReason = $this->refundAvailability->getPartialRefundBlockReason($order);
             if ($partialReason !== null) {
                 throw new LocalizedException($partialReason);
             }
+            $creditmemo = $this->refunder->refund(
+                $invoice,
+                array_keys($rows),
+                $plan->getQtys(),
+                $backToStock,
+                $plan->getAdjustmentLines(),
+                $plan->getTotal()
+            );
         }
-
-        $creditmemo = $this->refunder->refund($invoice, array_keys($rows), $qtys, $backToStock);
 
         return (string)$order->formatPriceTxt((float)$creditmemo->getGrandTotal());
     }
 
     /**
-     * Check that the posted refund mode matches the entered quantities.
+     * Check that the posted refund mode matches the entered quantities and amounts.
      *
-     * @param array $qtys quantities greater than zero, keyed by item id
+     * @param bool $nothingEntered whether no quantity or amount was entered
      * @return void
      * @throws LocalizedException
      */
-    private function checkRefundMode(array $qtys): void
+    private function checkRefundMode(bool $nothingEntered): void
     {
         $mode = (string)$this->getRequest()->getParam('refund_mode');
-        if ($qtys === [] && $mode !== self::MODE_FULL) {
+        if ($nothingEntered && $mode !== self::MODE_FULL) {
             throw new LocalizedException(__(
-                'Enter the quantity to refund for at least one item, or confirm a full refund.'
+                'Enter the quantity or amount to refund for at least one item, or confirm a full refund.'
             ));
         }
 
-        if ($qtys !== [] && $mode !== self::MODE_PARTIAL) {
+        if (!$nothingEntered && $mode !== self::MODE_PARTIAL) {
             throw new LocalizedException(__(
                 'The refund type does not match the entered quantities. Check the quantities and submit again.'
             ));
         }
+    }
+
+    /**
+     * The `shipping_refund_amount` request parameter, '' when missing.
+     *
+     * @return string
+     */
+    private function getShippingInput(): string
+    {
+        $value = $this->getRequest()->getParam('shipping_refund_amount');
+
+        return is_scalar($value) ? (string)$value : '';
     }
 
     /**

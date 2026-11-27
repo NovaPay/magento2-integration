@@ -320,7 +320,10 @@ class StatusMapper
             return;
         }
 
-        if ($status === 'voided' && $this->applyPartialRefundIfConfirmed($order, $parsed, $payloadHash, $source)) {
+        $fullRefundConfirmed = false;
+        if ($status === 'voided'
+            && $this->applyPartialRefundIfConfirmed($order, $parsed, $payloadHash, $source, $fullRefundConfirmed)
+        ) {
             $this->logPositiveVerdict($order, $status, $payloadHash);
 
             return;
@@ -346,7 +349,11 @@ class StatusMapper
         $state = self::STATE_MAP[$status];
         $label = $this->resolveLabel($status, $state, (int)$order->getStoreId());
 
-        $this->applier->apply($order, $parsed, $state, $label, $payloadHash, $source);
+        if ($fullRefundConfirmed) {
+            $this->applier->apply($order, $parsed, $state, $label, $payloadHash, $source, true);
+        } else {
+            $this->applier->apply($order, $parsed, $state, $label, $payloadHash, $source);
+        }
         $this->logPositiveVerdict($order, $status, $payloadHash);
     }
 
@@ -646,9 +653,19 @@ class StatusMapper
      *
      * Otherwise NovaPay's refund state is read from the event's own `operations[]` when it carries
      * usable data (a get-status poll), else from `/v1/get-status` ({@see NovaPayRefundState::fetch()}):
-     * - NovaPay reports everything refunded: full refund, returns false (closed / Refunded).
+     * - NovaPay reports everything refunded: full refund, returns false (closed / Refunded). When
+     *   nothing was refunded in Magento and get-status states the refunded amount explicitly
+     *   ({@see autoCreditmemoEvidence()}), `$fullRefundConfirmed` = true, so
+     *   {@see OrderStatusApplier::apply()} creates the automatic credit memo for a full refund made
+     *   outside Magento.
      * - NovaPay reports a partial refund: {@see OrderStatusApplier::applyPartialRefund()}, the order
-     *   stays paid; flagged "outside Magento" when the ledger shows no refund at all.
+     *   stays paid; flagged "outside Magento" when NovaPay's refunded amount exceeds Magento's
+     *   `base_total_refunded`; the applier creates an offline credit memo of the difference only
+     *   when get-status states the refunded amount explicitly ({@see autoCreditmemoEvidence()}),
+     *   otherwise it asks for manual reconciliation.
+     *   A refund made from Magento is already in the ledger when its `voided` arrives (the online
+     *   refund holds the per-session lock until its credit memo is committed), so it is never
+     *   counted twice.
      * - NovaPay could not be asked or reports nothing refunded (logged by the service): the ledger
      *   decides, a partial ledger refund stays paid, an empty ledger keeps the full-refund path.
      *
@@ -656,13 +673,15 @@ class StatusMapper
      * @param ParsedPostback $parsed
      * @param string $payloadHash
      * @param string $source
+     * @param bool $fullRefundConfirmed set to true when NovaPay confirms everything refunded
      * @return bool whether the event was applied as a partial refund
      */
     private function applyPartialRefundIfConfirmed(
         Order $order,
         ParsedPostback $parsed,
         string $payloadHash,
-        string $source
+        string $source,
+        bool &$fullRefundConfirmed
     ): bool {
         $paid = (float)$order->getBaseTotalPaid();
         $ledgerRefunded = (float)$order->getBaseTotalRefunded();
@@ -670,10 +689,22 @@ class StatusMapper
             return false;
         }
 
-        $snapshot = $this->refundState->fromOperations($parsed->getOperations())
-            ?? $this->refundState->fetch($order, $parsed->getSessionId());
+        $snapshot = $this->refundState->fromOperations($parsed->getOperations());
+        $fetched = false;
+        if ($snapshot === null) {
+            $snapshot = $this->refundState->fetch($order, $parsed->getSessionId());
+            $fetched = true;
+        }
 
         if ($snapshot !== null && $snapshot->isFullyRefunded()) {
+            // An automatic credit memo for a full refund made outside Magento only when nothing was
+            // refunded in Magento yet and NovaPay states the refunded amount explicitly; otherwise
+            // the order is closed with the voided_ledger_mismatch WARNING for a human to reconcile.
+            if ($ledgerRefunded <= self::AMOUNT_TOLERANCE) {
+                $evidence = $this->autoCreditmemoEvidence($order, $parsed, $snapshot, $fetched, $source);
+                $fullRefundConfirmed = $evidence !== null && $evidence->isFullyRefunded();
+            }
+
             return false;
         }
 
@@ -696,10 +727,54 @@ class StatusMapper
             $snapshot = new RefundSnapshot($paid, $ledgerRefunded);
         }
 
-        $outsideMagento = $ledgerRefunded <= self::AMOUNT_TOLERANCE;
-        $this->applier->applyPartialRefund($order, $parsed, $payloadHash, $snapshot, $outsideMagento, $source);
+        $outsideMagento = $snapshot->getRefunded() - $ledgerRefunded > self::AMOUNT_TOLERANCE;
+        $autoCreditmemo = false;
+        if ($outsideMagento) {
+            $evidence = $this->autoCreditmemoEvidence($order, $parsed, $snapshot, $fetched, $source);
+            $autoCreditmemo = $evidence !== null
+                && !$evidence->isFullyRefunded()
+                && $evidence->getRefunded() - $ledgerRefunded > self::AMOUNT_TOLERANCE;
+            if ($autoCreditmemo) {
+                $snapshot = $evidence;
+            }
+        }
+
+        if ($autoCreditmemo) {
+            $this->applier->applyPartialRefund($order, $parsed, $payloadHash, $snapshot, true, $source, true);
+        } else {
+            $this->applier->applyPartialRefund($order, $parsed, $payloadHash, $snapshot, $outsideMagento, $source);
+        }
 
         return true;
+    }
+
+    /**
+     * The NovaPay refund state an automatic credit memo may be based on, or null.
+     *
+     * Only `/v1/get-status` data counts (the event itself when it is a get-status poll or was just
+     * fetched, otherwise a fresh fetch): a postback's `operations[]` may omit `refunded_amount`, which
+     * is read as "fully refunded". And only a snapshot whose operations all carry an explicit numeric
+     * `refunded_amount` ({@see RefundSnapshot::isExplicit()}).
+     *
+     * @param Order $order
+     * @param ParsedPostback $parsed
+     * @param RefundSnapshot $snapshot the snapshot already read for this event
+     * @param bool $fetched whether `$snapshot` came from {@see NovaPayRefundState::fetch()}
+     * @param string $source
+     * @return RefundSnapshot|null
+     */
+    private function autoCreditmemoEvidence(
+        Order $order,
+        ParsedPostback $parsed,
+        RefundSnapshot $snapshot,
+        bool $fetched,
+        string $source
+    ): ?RefundSnapshot {
+        if (!$fetched && $source !== OrderStatusApplier::SOURCE_GET_STATUS) {
+            $snapshot = $this->refundState->fetch($order, $parsed->getSessionId());
+        }
+
+        return $snapshot !== null && $snapshot->isExplicit() ? $snapshot : null;
     }
 
     /**

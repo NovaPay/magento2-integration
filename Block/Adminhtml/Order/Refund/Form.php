@@ -22,7 +22,10 @@ use NovaPay\Payment\Model\Refund\RefundCalculator;
  * Refund form of the optional NovaPay refund button (spec 8.2.3 - 8.2.6).
  *
  * Per paid invoice line: name, SKU, paid quantity, refunded quantity, "quantity to refund" input,
- * read-only "amount to refund"; below: the total, the partial refund banner and the
+ * editable "amount to refund" (prefilled with quantity x unit amount) with the amount already
+ * refunded for the line (spec 8.4), and a shipping row with an amount input; below: the total, the
+ * amount refunded through NovaPay without a line (a refund made in the NovaPay cabinet), the
+ * partial refund banner and the
  * "Refund via NovaPay" button. When a refund or a partial refund is not possible, the reason is shown
  * up front and the inputs are disabled. After a failed submit the entered values come back from
  * {@see FormDataStore}.
@@ -47,6 +50,16 @@ class Form extends Template
      * @var array|null
      */
     private ?array $preservedItems = null;
+
+    /**
+     * @var array|null
+     */
+    private ?array $shippingRow = null;
+
+    /**
+     * @var bool
+     */
+    private bool $shippingRowLoaded = false;
 
     /**
      * @param Context $context
@@ -82,6 +95,8 @@ class Form extends Template
         $this->order = $order;
         $this->rows = null;
         $this->preservedItems = null;
+        $this->shippingRow = null;
+        $this->shippingRowLoaded = false;
 
         return $this;
     }
@@ -109,6 +124,32 @@ class Form extends Template
         }
 
         return $this->rows;
+    }
+
+    /**
+     * The shipping row (see {@see RefundCalculator::getShippingRow()}), or null.
+     *
+     * @return array|null
+     */
+    public function getShippingRow(): ?array
+    {
+        if (!$this->shippingRowLoaded) {
+            $this->shippingRowLoaded = true;
+            $invoice = $this->order !== null ? $this->calculator->getRefundInvoice($this->order) : null;
+            $this->shippingRow = $invoice !== null ? $this->calculator->getShippingRow($invoice) : null;
+        }
+
+        return $this->shippingRow;
+    }
+
+    /**
+     * Amount refunded through NovaPay without a line (a refund made in the NovaPay cabinet).
+     *
+     * @return float
+     */
+    public function getUnattributedRefunded(): float
+    {
+        return $this->order !== null ? $this->calculator->getUnattributedRefunded($this->order) : 0.0;
     }
 
     /**
@@ -154,6 +195,21 @@ class Form extends Template
     }
 
     /**
+     * The amount entered for a line before the last failed submit, '' when none.
+     *
+     * The line is an order item id or "shipping".
+     *
+     * @param int|string $lineId
+     * @return string
+     */
+    public function getPreservedAmount(int|string $lineId): string
+    {
+        $items = $this->getPreservedItems();
+
+        return isset($items[$lineId]['amount']) ? (string)$items[$lineId]['amount'] : '';
+    }
+
+    /**
      * The "Return to Stock" state of an item: as submitted before the last failed submit, else the default.
      *
      * @param int $itemId
@@ -164,7 +220,7 @@ class Form extends Template
     {
         $items = $this->getPreservedItems();
 
-        return isset($items[$itemId]) ? !empty($items[$itemId]['back_to_stock']) : $default;
+        return isset($items[$itemId]['back_to_stock']) ? !empty($items[$itemId]['back_to_stock']) : $default;
     }
 
     /**
@@ -266,6 +322,11 @@ class Form extends Template
         return (string)$this->json->serialize([
             'unitAmounts' => $units,
             'fullAmount' => $this->getFullRefundAmount(),
+            'maxTotal' => $this->getFullRefundAmount(),
+            'totalTooHigh' => (string)__('The total amount to refund cannot be more than %1.'),
+            'errorQty' => (string)__('Enter a quantity from 0 to %1.'),
+            'errorAmount' => (string)__('Enter an amount from 0 to %1.'),
+            'errorZeroAmount' => (string)__('Enter an amount above 0, or clear the quantity.'),
             'priceFormat' => $this->localeFormat->getPriceFormat(null, $currencyCode ?: null),
             'confirmFull' => (string)__('Refund the full order amount (%1)?'),
             'confirmPartial' => (string)__('Refund %1 via NovaPay?'),

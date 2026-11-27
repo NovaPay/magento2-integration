@@ -12,8 +12,8 @@ use Magento\Backend\Model\Session as BackendSession;
 /**
  * Keeps the values the admin entered in the NovaPay refund form across the redirect after an error.
  *
- * {@see \NovaPay\Payment\Controller\Adminhtml\Order\RefundPost} saves the submitted quantities and
- * "Return to Stock" flags when the refund fails; {@see \NovaPay\Payment\Block\Adminhtml\Order\Refund\Form}
+ * {@see \NovaPay\Payment\Controller\Adminhtml\Order\RefundPost} saves the submitted quantities,
+ * amounts and "Return to Stock" flags when the refund fails; {@see \NovaPay\Payment\Block\Adminhtml\Order\Refund\Form}
  * takes them once when the form is rendered again, so a second click does not turn a partial refund
  * into a full one. The values are stored in the admin session under a key scoped to the order.
  */
@@ -22,7 +22,7 @@ class FormDataStore
     private const KEY_PREFIX = 'novapay_refund_form_';
 
     /**
-     * Longest quantity string kept, anything longer is dropped.
+     * Longest quantity or amount string kept, anything longer is dropped.
      */
     private const MAX_QTY_LENGTH = 32;
 
@@ -38,22 +38,25 @@ class FormDataStore
      * Save the submitted items of an order's refund form.
      *
      * @param int $orderId
-     * @param array $postedItems `items` request parameter: [item id => ['qty' => ..., 'back_to_stock' => ...]]
+     * @param array $postedItems `items` request parameter:
+     *     [item id => ['qty' => ..., 'amount' => ..., 'back_to_stock' => ...]]
+     * @param string $shippingAmount `shipping_refund_amount` request parameter
      * @return void
      */
-    public function save(int $orderId, array $postedItems): void
+    public function save(int $orderId, array $postedItems, string $shippingAmount = ''): void
     {
         $items = [];
         foreach ($postedItems as $itemId => $itemData) {
             if (!is_array($itemData) || (int)$itemId <= 0) {
                 continue;
             }
-            $qty = isset($itemData['qty']) && is_scalar($itemData['qty']) ? trim((string)$itemData['qty']) : '';
             $items[(int)$itemId] = [
-                'qty' => strlen($qty) <= self::MAX_QTY_LENGTH ? $qty : '',
+                'qty' => $this->clean($itemData['qty'] ?? null),
+                'amount' => $this->clean($itemData['amount'] ?? null),
                 'back_to_stock' => !empty($itemData['back_to_stock']),
             ];
         }
+        $items[RefundLedger::SHIPPING] = ['amount' => $this->clean($shippingAmount)];
 
         $this->session->setData(self::KEY_PREFIX . $orderId, $items);
     }
@@ -62,12 +65,26 @@ class FormDataStore
      * Read and clear the saved items of an order's refund form.
      *
      * @param int $orderId
-     * @return array<int, array{qty: string, back_to_stock: bool}> empty when nothing was saved
+     * @return array<int|string, array{qty?: string, amount: string, back_to_stock?: bool}> keyed by
+     *     order item id, plus {@see RefundLedger::SHIPPING}; empty when nothing was saved
      */
     public function take(int $orderId): array
     {
         $items = $this->session->getData(self::KEY_PREFIX . $orderId, true);
 
         return is_array($items) ? $items : [];
+    }
+
+    /**
+     * A trimmed scalar input value, '' when missing or longer than {@see MAX_QTY_LENGTH}.
+     *
+     * @param mixed $value
+     * @return string
+     */
+    private function clean(mixed $value): string
+    {
+        $value = is_scalar($value) ? trim((string)$value) : '';
+
+        return strlen($value) <= self::MAX_QTY_LENGTH ? $value : '';
     }
 }

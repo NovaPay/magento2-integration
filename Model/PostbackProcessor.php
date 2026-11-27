@@ -422,6 +422,22 @@ class PostbackProcessor
      */
     private function buildLockName(string $sessionId): string
     {
+        return self::lockNameForSession($sessionId);
+    }
+
+    /**
+     * The per-session apply lock name (see {@see buildLockName()}), shared with
+     * {@see \NovaPay\Payment\Plugin\Sales\OnlineRefundSessionLockPlugin}: an online refund holds the
+     * same lock until its credit memo is committed, so a `voided` postback for that refund is applied
+     * only afterwards and sees the refund in Magento's ledger. A pure function, like
+     * {@see signatureHeaderForVersion()}.
+     *
+     * @param string $sessionId
+     * @return string
+     */
+    // phpcs:ignore Magento2.Functions.StaticFunction.StaticFunction
+    public static function lockNameForSession(string $sessionId): string
+    {
         return self::LOCK_NAME_PREFIX . substr(hash('sha256', $sessionId), 0, self::LOCK_NAME_HASH_LENGTH);
     }
 

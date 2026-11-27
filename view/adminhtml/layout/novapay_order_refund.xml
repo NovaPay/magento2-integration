@@ -4,6 +4,9 @@
   Licensed under the MIT License. See LICENSE for details.
 -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="NovaPay_Payment::css/refund-form.css"/>
+    </head>
     <body>
         <!-- Refund form of the optional NovaPay refund button (novapay/order/refund). -->
         <referenceContainer name="content">

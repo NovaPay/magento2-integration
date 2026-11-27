@@ -20,6 +20,7 @@ use Magento\Sales\Api\InvoiceRepositoryInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\TransactionRepositoryInterface;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Creditmemo;
 use Magento\Sales\Model\Order\Invoice;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Sales\Model\Order\Payment;
@@ -28,6 +29,8 @@ use Magento\Sales\Model\Service\InvoiceService;
 use NovaPay\Payment\Gateway\Config;
 use NovaPay\Payment\Model\Order\AdminPhraseRenderer;
 use NovaPay\Payment\Model\Postback\ParsedPostback;
+use NovaPay\Payment\Model\Refund\OutsideRefundCreditmemo;
+use NovaPay\Payment\Model\Refund\RefundLedger;
 use NovaPay\Payment\Model\Refund\RefundSnapshot;
 use Psr\Log\LoggerInterface;
 
@@ -144,6 +147,10 @@ class OrderStatusApplier
      * @param TransactionRepositoryInterface $transactionRepository
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
      * @param AdminPhraseRenderer $adminPhraseRenderer renders order comments in the admin locale
+     * @param OutsideRefundCreditmemo $outsideRefundCreditmemo offline credit memo for a refund made in
+     *     the NovaPay cabinet
+     * @param RefundLedger $refundLedger per-line refund attribution
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         private readonly InvoiceService $invoiceService,
@@ -156,7 +163,9 @@ class OrderStatusApplier
         private readonly Config $config,
         private readonly TransactionRepositoryInterface $transactionRepository,
         private readonly SearchCriteriaBuilder $searchCriteriaBuilder,
-        private readonly AdminPhraseRenderer $adminPhraseRenderer
+        private readonly AdminPhraseRenderer $adminPhraseRenderer,
+        private readonly OutsideRefundCreditmemo $outsideRefundCreditmemo,
+        private readonly RefundLedger $refundLedger
     ) {
     }
 
@@ -235,6 +244,8 @@ class OrderStatusApplier
      * @param string $label
      * @param string $payloadHash
      * @param string $source where the event came from: {@see SOURCE_POSTBACK} or {@see SOURCE_GET_STATUS}
+     * @param bool $fullRefundConfirmed `voided` only: NovaPay's own refund state (get-status or the
+     *     event's operations) confirms the whole captured amount refunded, see {@see applyVoided()}
      * @return void
      */
     public function apply(
@@ -243,7 +254,8 @@ class OrderStatusApplier
         string $state,
         string $label,
         string $payloadHash,
-        string $source = self::SOURCE_POSTBACK
+        string $source = self::SOURCE_POSTBACK,
+        bool $fullRefundConfirmed = false
     ): void {
         $this->persistPaymentInfo($order, $parsed, $payloadHash);
 
@@ -258,7 +270,7 @@ class OrderStatusApplier
                 $this->applyHoldConfirmed($order, $parsed, $label);
                 break;
             case 'voided':
-                $this->applyVoided($order);
+                $this->applyVoided($order, $parsed, $label, $source, $fullRefundConfirmed);
                 break;
             case 'expired':
                 $this->applyExpired($order, $parsed);
@@ -332,20 +344,34 @@ class OrderStatusApplier
      * NovaPay's operations recorded in the refunded-operations ledger (which also makes the refund
      * form read-only: further refunds go through NovaPay support).
      *
-     * Adds ONE admin comment instead of the generic per-event entry:
-     * - `$outsideMagento` false: "NovaPay confirmed a partial refund ...";
-     * - `$outsideMagento` true (no credit memo in Magento): "... made outside Magento ... reconcile
-     *   manually", plus a WARNING `refund.partial_outside_magento`. No credit memo is created.
+     * - `$outsideMagento` false (the refund was made from Magento, its credit memo is in the ledger):
+     *   one comment "Received status voided (postback): NovaPay confirmed a partial refund ...".
+     * - `$outsideMagento` true (NovaPay refunded X more than Magento's `base_total_refunded`, i.e. a
+     *   refund made in the NovaPay cabinet) and `$autoCreditmemoAllowed` (explicit get-status evidence):
+     *   an OFFLINE "Adjustment Refund" credit memo of X is created automatically
+     *   ({@see createOutsideRefundCreditmemo()}, no NovaPay call, quantities 0, transaction id = the
+     *   NovaPay operation id), X is recorded in the `unattributed` bucket
+     *   of {@see RefundLedger}, the order status stays (e.g. "Paid via NovaPay"), one comment
+     *   "Received status voided (postback): NovaPay refunded X of Y UAH outside Magento, a credit memo
+     *   was created automatically." and a NOTICE `refund.partial_outside_magento_creditmemo`. When the
+     *   credit memo cannot be created: the previous behaviour, comment "... reconcile manually" and a
+     *   WARNING `refund.partial_outside_magento`; the event is still applied.
      *
-     * Idempotent via {@see INFO_PARTIAL_REFUND_CONFIRMED_AMOUNT}: a re-evaluated `voided` (another
-     * postback body or a get-status poll) with the same refunded amount adds no second comment.
+     * Idempotent: the credit memo raises `base_total_refunded` by X, so a duplicate postback or a
+     * get-status poll (both serialized by the per-session lock and reading the saved order) finds no
+     * difference left; the idempotency key `{operation id}:{NovaPay refunded amount}` in
+     * {@see RefundLedger} guards it as well. The comment is added once per refunded amount
+     * ({@see INFO_PARTIAL_REFUND_CONFIRMED_AMOUNT}).
      *
      * @param Order $order
      * @param ParsedPostback $parsed
      * @param string $payloadHash
      * @param RefundSnapshot $snapshot refunded vs captured amount
-     * @param bool $outsideMagento whether Magento's ledger shows no refund at all
+     * @param bool $outsideMagento whether NovaPay refunded more than Magento's ledger shows
      * @param string $source where the event came from: {@see SOURCE_POSTBACK} or {@see SOURCE_GET_STATUS}
+     * @param bool $autoCreditmemoAllowed whether `$snapshot` is explicit get-status evidence an automatic
+     *     credit memo may be based on (decided by {@see StatusMapper}); without it an outside refund only
+     *     gets the manual-reconciliation comment and WARNING
      * @return void
      */
     public function applyPartialRefund(
@@ -354,7 +380,8 @@ class OrderStatusApplier
         string $payloadHash,
         RefundSnapshot $snapshot,
         bool $outsideMagento,
-        string $source = self::SOURCE_POSTBACK
+        string $source = self::SOURCE_POSTBACK,
+        bool $autoCreditmemoAllowed = false
     ): void {
         $this->persistPaymentInfo($order, $parsed, $payloadHash, false);
         $this->recordRefundedOperations($order, $snapshot->getOperations());
@@ -362,24 +389,63 @@ class OrderStatusApplier
         /** @var Payment $payment */
         $payment = $order->getPayment();
         $refunded = number_format($snapshot->getRefunded(), 2, '.', '');
-        $isNew = (string)$payment->getAdditionalInformation(self::INFO_PARTIAL_REFUND_CONFIRMED_AMOUNT) !== $refunded;
+        $captured = number_format($snapshot->getAmount(), 2, '.', '');
+        $currency = (string)$order->getBaseCurrencyCode();
+        $currency = $currency !== '' ? $currency : 'UAH';
+        $outsideAmount = $outsideMagento
+            ? round($snapshot->getRefunded() - (float)$order->getBaseTotalRefunded(), 2)
+            : 0.0;
 
-        if ($isNew) {
-            $currency = (string)$order->getBaseCurrencyCode();
-            $currency = $currency !== '' ? $currency : 'UAH';
-            $phrase = $outsideMagento
-                ? __(
+        $creditmemoId = null;
+        if ($autoCreditmemoAllowed && $outsideAmount > self::RECONCILE_TOLERANCE) {
+            $state = (string)$order->getState();
+            $status = (string)$order->getStatus();
+            $reference = $this->refundReference($order, $parsed, $snapshot->getOperations());
+            $creditmemoId = $this->createOutsideRefundCreditmemo(
+                $order,
+                $outsideAmount,
+                $reference . ':' . $refunded,
+                $reference,
+                false,
+                $source,
+                $this->outsideRefundPhrase($source, $outsideAmount, $captured, $currency),
+                $status
+            );
+            if ($creditmemoId !== null && (string)$order->getState() === $state && $status !== '') {
+                $order->setStatus($status);
+            }
+        }
+
+        $isNew = $creditmemoId !== null
+            || (string)$payment->getAdditionalInformation(self::INFO_PARTIAL_REFUND_CONFIRMED_AMOUNT) !== $refunded;
+        if ($creditmemoId !== null) {
+            // The comment was written together with the credit memo, see createOutsideRefundCreditmemo().
+            $payment->setAdditionalInformation(self::INFO_PARTIAL_REFUND_CONFIRMED_AMOUNT, $refunded);
+        } elseif ($isNew) {
+            if ($outsideMagento) {
+                $phrase = __(
                     'NovaPay reports a partial refund of %1 %2 made outside Magento. No credit memo was '
                     . 'created; please reconcile manually.',
                     $refunded,
                     $currency
-                )
-                : __(
-                    'NovaPay confirmed a partial refund: %1 of %2 %3 refunded, the rest remains captured.',
-                    $refunded,
-                    number_format($snapshot->getAmount(), 2, '.', ''),
-                    $currency
                 );
+            } else {
+                $phrase = $source === self::SOURCE_POSTBACK
+                    ? __(
+                        'Received status voided (postback): NovaPay confirmed a partial refund: %1 of %2 %3 '
+                        . 'refunded, the rest remains captured.',
+                        $refunded,
+                        $captured,
+                        $currency
+                    )
+                    : __(
+                        'Received status voided: NovaPay confirmed a partial refund: %1 of %2 %3 refunded, '
+                        . 'the rest remains captured.',
+                        $refunded,
+                        $captured,
+                        $currency
+                    );
+            }
             $this->addAdminComment($order, $phrase, (string)$order->getStatus());
             $payment->setAdditionalInformation(self::INFO_PARTIAL_REFUND_CONFIRMED_AMOUNT, $refunded);
         }
@@ -391,11 +457,25 @@ class OrderStatusApplier
             'source' => $source,
             'comment_added' => $isNew,
         ];
-        if ($outsideMagento) {
+        if ($creditmemoId !== null) {
+            $this->logger->notice(
+                'NovaPay reports a partial refund made outside Magento; an offline credit memo was created '
+                . 'automatically, the order stays paid.',
+                [
+                    'event' => 'refund.partial_outside_magento_creditmemo',
+                    'outside_amount' => $outsideAmount,
+                    'creditmemo_id' => $creditmemoId,
+                ] + $context
+            );
+        } elseif ($outsideMagento) {
             $this->logger->warning(
                 'NovaPay reports a partial refund with no credit memo in Magento; the order stays paid, '
                 . 'reconcile manually.',
-                ['event' => 'refund.partial_outside_magento'] + $context
+                [
+                    'event' => 'refund.partial_outside_magento',
+                    'outside_amount' => $outsideAmount,
+                    'auto_creditmemo_allowed' => $autoCreditmemoAllowed,
+                ] + $context
             );
         } else {
             $this->logInfo(
@@ -406,6 +486,177 @@ class OrderStatusApplier
         }
 
         $this->orderRepository->save($order);
+    }
+
+    /**
+     * Create the offline credit memo for a refund made outside Magento; never throws.
+     *
+     * The {@see RefundLedger} entry and the history comment are put on the order before core refunds
+     * the credit memo, so core saves them in the same transaction as the credit memo; on failure they
+     * are rolled back with it (in memory too) and null is returned, the caller then falls back to the
+     * manual-reconciliation behaviour.
+     *
+     * @param Order $order
+     * @param float $baseAmount amount refunded outside Magento
+     * @param string $key idempotency key
+     * @param string $reference NovaPay reference (credit memo transaction id)
+     * @param bool $fullRefund whether NovaPay refunded everything captured
+     * @param string $source
+     * @param Phrase $comment history comment of the automatic credit memo
+     * @param string $commentStatus status the comment is stamped with
+     * @return string|null the credit memo id, null when none was created
+     */
+    private function createOutsideRefundCreditmemo(
+        Order $order,
+        float $baseAmount,
+        string $key,
+        string $reference,
+        bool $fullRefund,
+        string $source,
+        Phrase $comment,
+        string $commentStatus
+    ): ?string {
+        $payment = $order->getPayment();
+        if ($payment === null) {
+            return null;
+        }
+        if ($this->refundLedger->hasAutoCreditmemo($payment, $key)) {
+            $this->logger->warning(
+                'NovaPay refund made outside Magento: an automatic credit memo was already created for this '
+                . 'refund, but the Magento ledger still differs; not creating a second one.',
+                [
+                    'event' => 'refund.outside_magento_creditmemo_exists',
+                    'order_increment_id' => $order->getIncrementId(),
+                    'idempotency_key' => $key,
+                    'source' => $source,
+                ]
+            );
+
+            return null;
+        }
+
+        $orderAmount = round($baseAmount * $this->baseToOrderRate($order), 2);
+        $beforeRefund = function (Creditmemo $creditmemo) use (
+            $order,
+            $payment,
+            $key,
+            $orderAmount,
+            $comment,
+            $commentStatus
+        ): void {
+            $this->refundLedger->recordAutoCreditmemo(
+                $payment,
+                $key,
+                $orderAmount,
+                '',
+                (float)$creditmemo->getAdjustmentPositive() > self::RECONCILE_TOLERANCE
+            );
+            $this->addAdminComment($order, $comment, $commentStatus);
+        };
+
+        try {
+            $creditmemo = $this->outsideRefundCreditmemo->create(
+                $order,
+                $baseAmount,
+                $reference,
+                $fullRefund,
+                $beforeRefund
+            );
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'NovaPay refund made outside Magento: the automatic offline credit memo could not be created.',
+                [
+                    'event' => 'refund.outside_magento_creditmemo_failed',
+                    'order_increment_id' => $order->getIncrementId(),
+                    'amount' => $baseAmount,
+                    'source' => $source,
+                    'exception' => $e->getMessage(),
+                ]
+            );
+
+            return null;
+        }
+
+        $creditmemoId = (string)$creditmemo->getEntityId();
+        $this->refundLedger->setAutoCreditmemoId($payment, $key, $creditmemoId);
+
+        return $creditmemoId;
+    }
+
+    /**
+     * Comment of an automatic credit memo for a refund made outside Magento.
+     *
+     * @param string $source
+     * @param float $amount
+     * @param string $captured
+     * @param string $currency
+     * @return Phrase
+     */
+    private function outsideRefundPhrase(string $source, float $amount, string $captured, string $currency): Phrase
+    {
+        $amount = number_format($amount, 2, '.', '');
+
+        return $source === self::SOURCE_POSTBACK
+            ? __(
+                'Received status voided (postback): NovaPay refunded %1 of %2 %3 outside Magento, a credit memo '
+                . 'was created automatically.',
+                $amount,
+                $captured,
+                $currency
+            )
+            : __(
+                'Received status voided: NovaPay refunded %1 of %2 %3 outside Magento, a credit memo was '
+                . 'created automatically.',
+                $amount,
+                $captured,
+                $currency
+            );
+    }
+
+    /**
+     * The NovaPay reference of a refund.
+     *
+     * The first operation id of the event or snapshot, else the capture operation id, the payment id,
+     * the session id.
+     *
+     * @param Order $order
+     * @param ParsedPostback $parsed
+     * @param array $operations
+     * @return string
+     */
+    private function refundReference(Order $order, ParsedPostback $parsed, array $operations): string
+    {
+        foreach (array_merge($operations, $parsed->getOperations() ?? []) as $operation) {
+            if (is_array($operation)) {
+                $id = $this->extractOperationId($operation);
+                if ($id !== '') {
+                    return $id;
+                }
+            }
+        }
+
+        $payment = $order->getPayment();
+        foreach ([self::INFO_CAPTURE_OPERATION_ID, 'novapay_payment_id'] as $key) {
+            $value = $payment?->getAdditionalInformation($key);
+            if (is_scalar($value) && trim((string)$value) !== '') {
+                return trim((string)$value);
+            }
+        }
+
+        return $parsed->getSessionId();
+    }
+
+    /**
+     * The order's base-to-order currency rate, 1 when unknown.
+     *
+     * @param Order $order
+     * @return float
+     */
+    private function baseToOrderRate(Order $order): float
+    {
+        $rate = (float)$order->getBaseToOrderRate();
+
+        return $rate > 0.0 ? $rate : 1.0;
     }
 
     /**
@@ -1350,14 +1601,33 @@ class OrderStatusApplier
      *       the caller right after this method returns) is idempotent with whatever it already set.
      *    b. Magento's ledger does NOT (yet) show the order fully refunded — either no credit memo
      *       was ever created locally (the void was initiated at NovaPay directly) or a prior
-     *       partial credit memo did not add up to the full amount. A genuine local/NovaPay mismatch
-     *       a human must reconcile — logged at WARNING.
+     *       partial credit memo did not add up to the full amount. When NovaPay itself confirmed
+     *       the whole captured amount refunded (`$fullRefundConfirmed`, decided by
+     *       {@see StatusMapper} from get-status / the event's operations), the rest is refunded by an
+     *       automatic OFFLINE credit memo ({@see createOutsideRefundCreditmemo()}: all remaining
+     *       quantities and shipping, or an "Adjustment Refund" when their total does not match; no
+     *       NovaPay call, return to stock per the store's auto-return setting) — only when nothing was
+     *       refunded in Magento yet and get-status stated the refunded amount explicitly — so the order
+     *       closes as "Refunded via NovaPay"; comment "Received status voided (postback): NovaPay
+     *       refunded X of Y UAH outside Magento, a credit memo was created automatically." and NOTICE
+     *       `refund.full_outside_magento_creditmemo`. Without that confirmation, or when the credit
+     *       memo cannot be created, it stays a mismatch a human must reconcile — WARNING
+     *       `sideeffect.voided_ledger_mismatch`. Idempotent like {@see applyPartialRefund()}.
      *
      * @param Order $order
+     * @param ParsedPostback $parsed
+     * @param string $label the status label {@see apply()} sets afterwards
+     * @param string $source
+     * @param bool $fullRefundConfirmed
      * @return void
      */
-    private function applyVoided(Order $order): void
-    {
+    private function applyVoided(
+        Order $order,
+        ParsedPostback $parsed,
+        string $label,
+        string $source,
+        bool $fullRefundConfirmed
+    ): void {
         if ($order->getInvoiceCollection()->getSize() === 0) {
             if ($order->canCancel()) {
                 $order->cancel();
@@ -1405,6 +1675,10 @@ class OrderStatusApplier
             return;
         }
 
+        if ($fullRefundConfirmed && $this->createFullOutsideRefundCreditmemo($order, $parsed, $label, $source)) {
+            return;
+        }
+
         $this->logger->warning(
             'NovaPay "voided" postback received for an already-invoiced order, but Magento\'s own '
             . 'ledger does not show it fully refunded — this void may have been initiated at '
@@ -1417,6 +1691,61 @@ class OrderStatusApplier
                 'base_total_refunded' => $baseTotalRefunded,
             ]
         );
+    }
+
+    /**
+     * The automatic credit memo of a full refund made outside Magento (see {@see applyVoided()}).
+     *
+     * @param Order $order
+     * @param ParsedPostback $parsed
+     * @param string $label
+     * @param string $source
+     * @return bool whether the credit memo was created
+     */
+    private function createFullOutsideRefundCreditmemo(
+        Order $order,
+        ParsedPostback $parsed,
+        string $label,
+        string $source
+    ): bool {
+        // Never on top of a refund already made in Magento: that mismatch is for a human to reconcile.
+        if ((float)$order->getBaseTotalRefunded() > self::RECONCILE_TOLERANCE) {
+            return false;
+        }
+
+        $paid = (float)$order->getBaseTotalPaid();
+        $amount = round($paid, 2);
+        $captured = number_format($paid, 2, '.', '');
+        $currency = (string)$order->getBaseCurrencyCode();
+        $reference = $this->refundReference($order, $parsed, []);
+        $creditmemoId = $this->createOutsideRefundCreditmemo(
+            $order,
+            $amount,
+            $reference . ':' . $captured,
+            $reference,
+            true,
+            $source,
+            $this->outsideRefundPhrase($source, $amount, $captured, $currency !== '' ? $currency : 'UAH'),
+            $label
+        );
+        if ($creditmemoId === null) {
+            return false;
+        }
+
+        $this->logger->notice(
+            'NovaPay reports a full refund made outside Magento; an offline credit memo was created '
+            . 'automatically and the order is closed.',
+            [
+                'event' => 'refund.full_outside_magento_creditmemo',
+                'order_increment_id' => $order->getIncrementId(),
+                'outside_amount' => $amount,
+                'captured_amount' => $paid,
+                'creditmemo_id' => $creditmemoId,
+                'source' => $source,
+            ]
+        );
+
+        return true;
     }
 
     /**

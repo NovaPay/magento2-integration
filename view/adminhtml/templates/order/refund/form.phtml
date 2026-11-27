@@ -23,6 +23,8 @@ $qtyDisabled = $isBlocked || $partialReason !== null;
 $showStock = $block->canReturnToStock();
 $autoReturn = $block->isAutoReturnEnabled();
 $fullAmount = $block->getFullRefundAmount();
+$shippingRow = $rows !== [] ? $block->getShippingRow() : null;
+$unattributed = $block->getUnattributedRefunded();
 ?>
 <form id="novapay-refund-form" class="novapay-refund-form" method="post"
       action="<?= $escaper->escapeUrl($block->getSubmitUrl()) ?>"
@@ -73,6 +75,8 @@ $fullAmount = $block->getFullRefundAmount();
                 <?php foreach ($rows as $itemId => $row): ?>
                     <?php $rowDisabled = $qtyDisabled || $row['qty_refundable'] <= 0; ?>
                     <?php $qtyValue = $rowDisabled ? '' : $block->getPreservedQty((int)$itemId); ?>
+                    <?php $amountValue = $rowDisabled ? '' : $block->getPreservedAmount((int)$itemId); ?>
+                    <?php $amountMax = sprintf('%.2F', $row['amount_refundable']); ?>
                     <tr class="novapay-refund-row" data-item-id="<?= (int)$itemId ?>">
                         <td class="col-product"><?= $escaper->escapeHtml($row['name']) ?></td>
                         <td class="col-sku"><?= $escaper->escapeHtml($row['sku']) ?></td>
@@ -110,11 +114,72 @@ $fullAmount = $block->getFullRefundAmount();
                                 ) ?>
                             </div>
                         </td>
-                        <td class="col-total last novapay-refund-line-amount" data-item-id="<?= (int)$itemId ?>">
-                            <?= $escaper->escapeHtml($block->formatAmount(0.0)) ?>
+                        <td class="col-total last">
+                            <input type="number" class="input-text admin__control-text novapay-refund-amount"
+                                   name="items[<?= (int)$itemId ?>][amount]"
+                                   value="<?= $escaper->escapeHtmlAttr($amountValue) ?>"
+                                   min="0" step="0.01"
+                                   max="<?= $escaper->escapeHtmlAttr($amountMax) ?>"
+                                   placeholder="0.00"
+                                   data-item-id="<?= (int)$itemId ?>"
+                                   aria-label="<?= $escaper->escapeHtmlAttr(__('Amount to Refund')) ?>"
+                                   <?= $qtyDisabled || $row['amount_refundable'] <= 0 ? 'disabled="disabled"' : '' ?>/>
+                            <div class="note">
+                                <?= $escaper->escapeHtml(
+                                    __('max %1', $block->formatAmount($row['amount_refundable']))
+                                ) ?>
+                            </div>
+                            <?php if ($row['refunded_amount'] > 0): ?>
+                                <div class="note novapay-refund-line-refunded">
+                                    <?= $escaper->escapeHtml(
+                                        __('Refunded: %1', $block->formatAmount($row['refunded_amount']))
+                                    ) ?>
+                                </div>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
+                <?php if ($shippingRow !== null): ?>
+                    <?php $shippingDisabled = $qtyDisabled || $shippingRow['amount_refundable'] <= 0; ?>
+                    <?php $shippingValue = $shippingDisabled ? '' : $block->getPreservedAmount('shipping'); ?>
+                    <?php $shippingMax = sprintf('%.2F', $shippingRow['amount_refundable']); ?>
+                    <tr class="novapay-refund-row novapay-refund-shipping-row" data-item-id="shipping">
+                        <td class="col-product"><?= $escaper->escapeHtml($shippingRow['name']) ?></td>
+                        <td class="col-sku"></td>
+                        <td class="col-price">
+                            <?= $escaper->escapeHtml($block->formatAmount($shippingRow['paid_amount'])) ?>
+                        </td>
+                        <td class="col-qty"></td>
+                        <td class="col-qty"></td>
+                        <?php if ($showStock): ?>
+                            <td class="col-return-to-stock"></td>
+                        <?php endif; ?>
+                        <td class="col-refund"></td>
+                        <td class="col-total last">
+                            <input type="number" class="input-text admin__control-text novapay-refund-amount"
+                                   name="shipping_refund_amount"
+                                   value="<?= $escaper->escapeHtmlAttr($shippingValue) ?>"
+                                   min="0" step="0.01"
+                                   max="<?= $escaper->escapeHtmlAttr($shippingMax) ?>"
+                                   placeholder="0.00"
+                                   data-item-id="shipping"
+                                   aria-label="<?= $escaper->escapeHtmlAttr(__('Amount to Refund')) ?>"
+                                   <?= $shippingDisabled ? 'disabled="disabled"' : '' ?>/>
+                            <div class="note">
+                                <?= $escaper->escapeHtml(
+                                    __('max %1', $block->formatAmount($shippingRow['amount_refundable']))
+                                ) ?>
+                            </div>
+                            <?php if ($shippingRow['refunded_amount'] > 0): ?>
+                                <div class="note novapay-refund-line-refunded">
+                                    <?= $escaper->escapeHtml(
+                                        __('Refunded: %1', $block->formatAmount($shippingRow['refunded_amount']))
+                                    ) ?>
+                                </div>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -132,26 +197,45 @@ $fullAmount = $block->getFullRefundAmount();
         </div>
         <table class="data-table admin__table-secondary order-subtotal-table">
             <tbody>
-            <tr>
-                <th><strong><?= $escaper->escapeHtml(__('Total Amount to Refund')) ?></strong></th>
-                <td>
-                    <strong class="novapay-refund-total"><?=
-                        $escaper->escapeHtml($block->formatAmount($fullAmount))
-                    ?></strong>
-                </td>
-            </tr>
+            <?php if ($unattributed > 0): ?>
+                <tr class="novapay-refund-unattributed">
+                    <th><?= $escaper->escapeHtml(__('Refunded via NovaPay (not tied to an item)')) ?></th>
+                    <td><?= $escaper->escapeHtml($block->formatAmount($unattributed)) ?></td>
+                </tr>
+            <?php endif; ?>
+            <?php if (!$isBlocked): ?>
+                <tr>
+                    <th><strong><?= $escaper->escapeHtml(__('Total Amount to Refund')) ?></strong></th>
+                    <td>
+                        <strong class="novapay-refund-total"><?=
+                            $escaper->escapeHtml($block->formatAmount($fullAmount))
+                        ?></strong>
+                    </td>
+                </tr>
+            <?php endif; ?>
             </tbody>
         </table>
-        <p class="note novapay-refund-mode-full">
-            <?= $escaper->escapeHtml(
-                __('No quantity entered: the full remaining amount will be refunded, shipping included.')
-            ) ?>
-        </p>
-        <p class="note novapay-refund-mode-partial no-display">
-            <?= $escaper->escapeHtml(
-                __('Partial refund of the selected quantities. Shipping is refunded only with a full refund.')
-            ) ?>
-        </p>
+            <?php if (!$isBlocked): ?>
+                <p class="message message-error error novapay-refund-mode-invalid no-display">
+                    <?= $escaper->escapeHtml(
+                        __('Fix the highlighted fields. The total shows only the valid amounts.')
+                    ) ?>
+                </p>
+                <p class="note novapay-refund-mode-full">
+                    <?= $escaper->escapeHtml(
+                        __('Nothing entered: the full remaining amount will be refunded, shipping included.')
+                    ) ?>
+                </p>
+                <p class="note novapay-refund-mode-partial no-display">
+                    <?= $escaper->escapeHtml(
+                        __(
+                            'Partial refund of the entered quantities and amounts. An amount that differs from '
+                            . 'quantity x price (and shipping) is refunded as an adjustment refund, without '
+                            . 'returning the item to stock.'
+                        )
+                    ) ?>
+                </p>
+            <?php endif; ?>
         <?php endif; ?>
         <div class="actions">
             <a class="action-default back" href="<?= $escaper->escapeUrl($block->getBackUrl()) ?>">

@@ -1,0 +1,21 @@
+/**
+ * Copyright © 2026 NovaPay. All rights reserved.
+ * Licensed under the MIT License. See LICENSE for details.
+ */
+
+/* NovaPay refund form: invalid quantity / amount fields and their inline error text. */
+.novapay-refund-form .admin__control-text._error,
+.novapay-refund-form .admin__control-text.mage-error {
+    border-color: #e22626;
+    box-shadow: 0 0 0 1px #e22626;
+}
+
+.novapay-refund-form .novapay-refund-field-error {
+    color: #e22626;
+    font-size: 1.2rem;
+    margin-top: 0.5rem;
+}
+
+.novapay-refund-form .novapay-refund-total.mage-error {
+    color: #e22626;
+}

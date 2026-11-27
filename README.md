@@ -109,7 +109,7 @@ therefore the website-level configuration) applies to every postback that domain
 | **Public Key** | NovaPay's RSA public key, used to verify the signature on every incoming postback. The postback delivers its signature in a **version-specific header** — `x-sign-v2` for v3, `x-sign` for the legacy v1/v2 shapes — and the module picks the correct header automatically from the **Postback Version** setting (v3 confirmed against a live NovaPay postback). Test and production public keys differ — use the one matching Test Mode. Read at the scope of the store resolved from the postback request's URL — see the multi-store note above. |
 | **Postback URL** | Read-only, nothing is saved. Shows the fully resolved postback URL for the scope you are editing: a store view shows its own secure base URL, a website shows its default store view, the default scope shows the default store view of the default website. Copy it into your NovaPay merchant admin panel. It is the same string the module sends automatically as `callback_url`. See [Postback URL setup](#postback-url-setup). |
 | **Payment Type** | `Direct` (maps to Magento's `authorize_capture` — funds captured immediately) or `Hold` (maps to `authorize` — funds blocked, you confirm capture later; see [Hold-mode guide](#hold-mode-guide)). |
-| **NovaPay refund button in order view** | Default **No**. When **Yes**, orders paid with NovaPay get one **NovaPay Refund** button in the order view instead of **Credit Memo** (order view and invoice view), **Void** (order view) and **Refund Offline** (credit memo form). On a hold the button releases the hold (a standard order cancel); on a paid order it opens a refund form and creates the standard online credit memo. Orders paid with other methods are not affected. See [NovaPay refund button (optional)](#novapay-refund-button-optional). |
+| **NovaPay refund button in order view** | Default **No**. When **Yes**, orders paid with NovaPay get one **NovaPay Refund** button in the order view instead of **Credit Memo** (order view and invoice view), **Void** (order view), **Cancel** (order view, only on an open hold) and **Refund Offline** (credit memo form). On a hold the button releases the hold (a standard order cancel); on a paid order it opens a refund form and creates the standard online credit memo. Orders paid with other methods are not affected. See [NovaPay refund button (optional)](#novapay-refund-button-optional). |
 | **NovaPay hold confirmation button in order view** | Default **No**. When **Yes**, a NovaPay order in hold gets a **Confirm NovaPay Hold** button in the order view, and the standard **Invoice** button is hidden for NovaPay orders. The button opens a form with the hold amount and an amount to confirm (a smaller amount is a partial confirmation and needs the **Recipient Identifier**); submitting it creates the standard online invoice. Orders paid with other methods are not affected. See [NovaPay hold confirmation button (optional)](#novapay-hold-confirmation-button-optional). |
 | **Postback Version** | **Only `v3` (the default) is implemented.** The dropdown still offers `v1`/`v2` for future compatibility, but selecting either of them — or leaving your NovaPay merchant account's own postback-version setting on v1/v2 — means the module drops **every** incoming postback: nothing is parsed, no order is ever updated from a postback, and each drop logs a warning with `reason: "unimplemented_version"` (HTTP 200 is still returned to NovaPay). Set your NovaPay merchant account's postback version to **v3** and leave this field at its default. Read at the scope of the store resolved from the postback request's URL — see the multi-store note above. |
 | **Success URL** | Optional. Leave empty to use Magento's own `checkout/onepage/success` page after payment. **Unresolved:** this route only accepts GET; see [Troubleshooting](#troubleshooting). |
@@ -288,7 +288,8 @@ With **Payment Type = Hold**:
    flips to paid when NovaPay confirms the capture server-to-server. If a `hold_confirmed` postback
    never arrives, the 15-minute `novapay_sync_status` cron (`POST /v1/get-status`) will pick it up.
 5. To cancel an uncaptured hold instead of capturing it, use the order's **Cancel** (or **Void**)
-   action. This maps to `POST /v1/void` and cancels the whole hold — **partial hold cancellation is
+   action (with the NovaPay refund button option on, the **NovaPay Refund** button replaces both on an
+   open hold). This maps to `POST /v1/void` and cancels the whole hold — **partial hold cancellation is
    not supported** and is not offered.
 6. **Magento's Hold / Unhold buttons are not the NovaPay hold.** They are Magento's own order-level
    hold (state `holded`), send nothing to NovaPay and only block other actions on the order. See the
@@ -312,11 +313,33 @@ Credit-memo refund rules:
   order is fully refunded via NovaPay, though only **one** online NovaPay refund is accepted in
   total per order (see the limitation below). NovaPay sends `voided` after a partial refund too;
   the module then asks `/v1/get-status` how much was refunded, keeps the order Paid via NovaPay and
-  adds the history comment "NovaPay confirmed a partial refund: ... refunded, the rest remains
-  captured." A partial refund made in NovaPay without a credit memo gets a "please reconcile
-  manually" comment instead.
-- Shipping can only be refunded as part of a **full** refund.
-- Adjustment fees/refunds on the credit memo are **not supported** and are blocked.
+  adds the history comment "Received status voided (postback): NovaPay confirmed a partial refund:
+  ... refunded, the rest remains captured."
+- **Refund made in the NovaPay cabinet** (outside Magento): when NovaPay reports more refunded than
+  Magento's credit memos show, the module creates an **offline** credit memo for the difference
+  automatically (no NovaPay call, transaction id = the NovaPay operation id).
+  - Partial: all quantities 0, the amount as "Adjustment Refund"; the order stays Paid via NovaPay.
+  - Full: only when nothing was refunded in Magento yet; all remaining quantities and shipping
+    (Return to Stock follows "Automatically Return Credit Memo Item to Stock"); the order closes as
+    Refunded via NovaPay. A full refund on top of a refund already made in Magento is left for manual
+    reconciliation (WARNING `sideeffect.voided_ledger_mismatch`).
+  - The amount must be stated explicitly by NovaPay's `/v1/get-status` (a numeric `refunded_amount`
+    on every operation). A postback's own `operations[]` are re-checked with get-status first; a
+    missing or `null` `refunded_amount` is not enough, the order then gets the "please reconcile
+    manually" comment instead.
+  - History comment: "Received status voided (postback): NovaPay refunded X of Y UAH outside
+    Magento, a credit memo was created automatically." (without "(postback)" when found by the
+    get-status cron), saved together with the credit memo. Duplicate postbacks and cron runs create no
+    second credit memo. If the credit memo cannot be created, the order gets the "please reconcile
+    manually" comment as before and the event is still applied.
+  - A refund made from Magento is never counted twice: every online refund (credit memo form, NovaPay
+    refund form, REST `POST /V1/invoice/:id/refund`) holds the postback lock of the session until its
+    credit memo is saved. If a postback changed the order after the page was loaded, the refund is
+    refused with "The order was updated by NovaPay, reload the page and try again."
+- Shipping can only be refunded as part of a **full** refund in the native credit memo form.
+- **Adjustment Fee** is not supported and is blocked. **Adjustment Refund** is accepted only from the
+  optional NovaPay refund form below (per-item refund amounts); typed into the native credit memo
+  form it is blocked.
 - The credit memo page shows a banner: *"Online refunds (full or partial) through NovaPay are
   available only for orders paid with NovaPay"* — a reminder that offline refunds (see below)
   don't touch NovaPay at all.
@@ -360,15 +383,28 @@ With **Yes**, for orders paid with NovaPay:
   amount per item, paid and refunded quantity, **Return to Stock**, **Qty to Refund** and the
   **Amount to Refund** of the line. Below are the **Total Amount to Refund**, the banner "A partial
   refund is possible if the order was paid to a NovaPay account" and the **Refund via NovaPay**
-  button. Leave every quantity empty for a full refund (all remaining items and shipping), the
-  button then asks "Refund the full order amount (...)?" first. Enter quantities for a partial
-  refund (shipping is not refunded then).
+  button. Leave every field empty for a full refund (all remaining items and shipping), the
+  button then asks "Refund the full order amount (...)?" first.
+- **Partial refund:** a quantity fills the line's **Amount to Refund** with quantity x price; the
+  amount can then be changed, or entered without a quantity, and the shipping row has its own
+  amount. A partial refund is not tied to the product price (for example part of the money back for
+  a defective item): each line's amount must be between 0 and what was paid for the line minus what
+  was already refunded for it, and the total must not exceed the captured amount minus what was
+  already refunded (checked in the browser and again on the server). The form shows "Refunded: X"
+  under each refunded line and a row "Refunded via NovaPay (not tied to an item)" for refunds made
+  in the NovaPay cabinet.
+- One native credit memo is created and one `POST /v1/void` sends the total: a line whose amount
+  equals quantity x price is refunded by quantity (Return to Stock applies); any other amount, and
+  shipping, goes into the credit memo's **Adjustment Refund** with quantity 0 for that line (no return
+  to stock). The amounts per line are kept in the payment (`novapay_refund_attribution`). Amounts
+  that add up to the whole remaining amount are sent as a full refund (the native full credit memo,
+  so the order closes).
 - On submit the module builds the credit memo exactly like the native credit memo form (core
   credit memo loader, same stock and totals logic) and refunds it online, so the same
   `POST /v1/void` request and the same refund rules as above apply. The amount refunded is the
   credit memo total calculated by Magento.
 - Any error, for example a NovaPay rejection, is shown on the form and nothing is saved: no credit
-  memo, no change to the order. The form keeps the entered quantities, so submitting again sends
+  memo, no change to the order. The form keeps the entered quantities and amounts, so submitting again sends
   the same partial refund, never a full one.
 - When a refund is not possible the form says so before you submit: after an earlier refund (one
   NovaPay refund per order, see the limitation above) the submit button is disabled; on a partially

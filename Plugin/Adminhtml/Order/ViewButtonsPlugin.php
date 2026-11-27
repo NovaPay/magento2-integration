@@ -27,7 +27,9 @@ use NovaPay\Payment\Model\Refund\RefundAvailability;
  *   button stays until the `voided` postback: after a refund or a hold release it opens the form
  *   read-only with a notice.
  *
- * The native "Cancel" button is kept: on a hold it does the same as the NovaPay button.
+ * On an open hold the native "Cancel" button is removed too, only when the NovaPay button replaces it
+ * (it would do the same hold release, without the confirmation). On other orders, for example an
+ * unpaid one, the native "Cancel" button is kept.
  * Orders paid with other methods, and every order while the option is off, are not touched.
  */
 class ViewButtonsPlugin
@@ -80,6 +82,7 @@ class ViewButtonsPlugin
         } elseif ($mode === RefundAvailability::MODE_CANCEL_HOLD
             && $this->authorization->isAllowed('Magento_Sales::cancel')
         ) {
+            $subject->removeButton('order_cancel');
             $subject->addButton(self::BUTTON_ID, [
                 'label' => __('NovaPay Refund'),
                 'class' => 'credit-memo novapay-refund',
